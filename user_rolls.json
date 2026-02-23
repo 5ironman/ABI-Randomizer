@@ -18,6 +18,7 @@
         "MAP: Airport\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP HS\nARMOR: Retro Sapper Bulletproof Vest (Tier 1)\nHELMET: Tanker Protective Cap (Tier 1)\nBACKPACK: Canvas Camping Backpack"
     ],
     "5ironman2": [
-        "MAP: Valley\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm DumDum\nARMOR: Defender M4 Heavy Body Armor (Black) (Tier 2)\nHELMET: AN95 Heavy Blast Helmet (Tier 3)\nBACKPACK: Outdoor Travel Backpack"
+        "MAP: Valley\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm DumDum\nARMOR: Defender M4 Heavy Body Armor (Black) (Tier 2)\nHELMET: AN95 Heavy Blast Helmet (Tier 3)\nBACKPACK: Outdoor Travel Backpack",
+        "MAP: Armory\nCLASS: Shotguns\nWEAPON: USAS-12\nAMMO: 12x70mm Dual Shell\nARMOR: IMTV Samurai Full Protection (Tier 2)\nHELMET: AS200 Heavy Tactical Helmet (Tier 4)\nBACKPACK: Field Camping Backpack"
     ]
 }
