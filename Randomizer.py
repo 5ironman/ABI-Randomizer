@@ -1,3 +1,4 @@
+# app.py
 import streamlit as st
 import json
 import random
@@ -15,7 +16,6 @@ import bcrypt
 BUILD_CODES_FILE = "build_codes.json"
 USER_ROLLS_FILE = "user_rolls.json"
 USER_ACCOUNTS_FILE = "user_accounts.json"
-
 LOCK_FILE = BUILD_CODES_FILE + ".lock"
 USER_LOCK_FILE = USER_ROLLS_FILE + ".lock"
 ACCOUNTS_LOCK_FILE = USER_ACCOUNTS_FILE + ".lock"
@@ -77,7 +77,6 @@ def save_build_codes_github(codes):
         except UnknownObjectException:
             file = None
             latest_codes = {}
-
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
@@ -87,9 +86,7 @@ def save_build_codes_github(codes):
                 else:
                     if code not in latest_codes[weapon]:
                         latest_codes[weapon].append(code)
-
         content = json.dumps(latest_codes, indent=4)
-
         if file:
             repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
         else:
@@ -116,15 +113,12 @@ def save_user_rolls_github(rolls):
         except UnknownObjectException:
             file = None
             latest_rolls = {}
-
         for user, user_roll_list in rolls.items():
             latest_rolls.setdefault(user, [])
             for r in user_roll_list:
                 if r not in latest_rolls[user]:
                     latest_rolls[user].append(r)
-
         content = json.dumps(latest_rolls, indent=4)
-
         if file:
             repo.update_file(USER_ROLLS_FILE, "update user rolls", content, sha=file.sha)
         else:
@@ -151,10 +145,8 @@ def save_user_accounts_github(accounts_dict):
         except UnknownObjectException:
             file = None
             latest_accounts = {}
-
         latest_accounts.update(accounts_dict)
         content = json.dumps(latest_accounts, indent=4)
-
         if file:
             repo.update_file(USER_ACCOUNTS_FILE, "update user accounts", content, sha=file.sha)
         else:
@@ -183,7 +175,7 @@ st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("admin_authenticated", False)
 st.session_state.setdefault("build_codes_authenticated", False)
 
-# Load accounts from GitHub if available
+# Load accounts from GitHub
 if repo:
     accounts_from_github = load_user_accounts_github()
     st.session_state.user_accounts.update(accounts_from_github)
@@ -209,7 +201,6 @@ if not st.session_state.user_authenticated:
     with login_tab:
         login_user = st.text_input("Username", key="login_user")
         login_pw = st.text_input("Password", type="password", key="login_pw")
-
         if st.button("Login"):
             if login_user in accounts and bcrypt.checkpw(login_pw.encode(), accounts[login_user].encode()):
                 st.session_state.username = login_user
@@ -225,7 +216,6 @@ if not st.session_state.user_authenticated:
     with register_tab:
         reg_user = st.text_input("Choose Username", key="reg_user")
         reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
-
         if st.button("Register"):
             if not reg_user or not reg_pw:
                 st.error("Cannot leave username/password empty.")
@@ -234,12 +224,8 @@ if not st.session_state.user_authenticated:
             else:
                 hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
                 accounts[reg_user] = hashed_pw
-
-                # Save locally and GitHub
                 save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
                 save_user_accounts_github(accounts)
-
-                # Auto-login
                 st.session_state.username = reg_user
                 st.session_state.user_authenticated = True
                 cookies["username"] = reg_user
@@ -355,22 +341,19 @@ backpacks = [
 
 MAPS = ["Armory", "Farm", "Valley", "Airport", "Northridge", "TV Station"]
 
-# ----------------------
-# INIT FILTERS
-# ----------------------
+# Initialize filters
 for tier in armors:
     st.session_state.armor_filters.setdefault(tier, True)
 for tier in helmets:
     st.session_state.helmet_filters.setdefault(tier, True)
+for cat in WEAPONS_DATA:
+    st.session_state.weapon_filters.setdefault(cat, True)
 
 # ----------------------
-# RANDOMIZER FUNCTIONS
+# RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    """Generate a random loadout based on selected filters."""
     loadout = {}
-
-    # Filtered weapons
     available_categories = [cat for cat, enabled in st.session_state.weapon_filters.items() if enabled]
     if available_categories:
         weapon_category = random.choice(available_categories)
@@ -378,116 +361,71 @@ def generate_loadout():
         ammo_type = WEAPONS_DATA[weapon_category][weapon]
         ammo = random.choice(ammo_data.get(ammo_type, ["Default Ammo"]))
         loadout["Weapon"] = f"{weapon} ({ammo})"
-
-    # Armor
     available_armor_tiers = [tier for tier, enabled in st.session_state.armor_filters.items() if enabled]
     if available_armor_tiers:
         tier = random.choice(available_armor_tiers)
         loadout["Armor"] = random.choice(armors[tier])
-
-    # Helmet
     available_helmet_tiers = [tier for tier, enabled in st.session_state.helmet_filters.items() if enabled]
     if available_helmet_tiers:
         tier = random.choice(available_helmet_tiers)
         loadout["Helmet"] = random.choice(helmets[tier])
-
-    # Backpack
     loadout["Backpack"] = random.choice(backpacks)
-
-    # Map
     loadout["Map"] = random.choice(MAPS)
-
     return json.dumps(loadout, indent=2)
 
-
 # ----------------------
-# RANDOMIZER TAB
+# TAB FUNCTIONS
 # ----------------------
 def randomizer_tab(tab):
+    # Weapon categories
     tab.subheader("Weapon Categories")
     col1w, col2w = tab.columns(2)
-
-    # Weapon checkboxes
-    def update_weapon_filter(cat):
-        st.session_state.weapon_filters[cat] = st.session_state[f"weapon_cb_{cat}"]
-
     for i, cat in enumerate(sorted(WEAPONS_DATA.keys())):
         key = f"weapon_cb_{cat}"
         col = col1w if i % 2 == 0 else col2w
-        col.checkbox(cat,
-                     value=st.session_state.weapon_filters.get(cat, True),
-                     key=key,
-                     on_change=update_weapon_filter,
-                     args=(cat,))
-
-    # Armor checkboxes
+        col.checkbox(cat, value=st.session_state.weapon_filters.get(cat, True), key=key,
+                     on_change=lambda c=cat: st.session_state.weapon_filters.update({c: st.session_state[f"weapon_cb_{c}"]}))
+    # Armor
     tab.subheader("Armor Tiers")
     col1a, col2a = tab.columns(2)
-
-    def update_armor_filter(tier):
-        st.session_state.armor_filters[tier] = st.session_state[f"armor_cb_{tier}"]
-
     for i, tier in enumerate(sorted(armors.keys())):
         key = f"armor_cb_{tier}"
         col = col1a if i % 2 == 0 else col2a
-        col.checkbox(tier,
-                     value=st.session_state.armor_filters.get(tier, True),
-                     key=key,
-                     on_change=update_armor_filter,
-                     args=(tier,))
-
-    # Helmet checkboxes
+        col.checkbox(tier, value=st.session_state.armor_filters.get(tier, True), key=key,
+                     on_change=lambda t=tier: st.session_state.armor_filters.update({t: st.session_state[f"armor_cb_{t}"]}))
+    # Helmet
     tab.subheader("Helmet Tiers")
     col1h, col2h = tab.columns(2)
-
-    def update_helmet_filter(tier):
-        st.session_state.helmet_filters[tier] = st.session_state[f"helmet_cb_{tier}"]
-
     for i, tier in enumerate(sorted(helmets.keys())):
         key = f"helmet_cb_{tier}"
         col = col1h if i % 2 == 0 else col2h
-        col.checkbox(tier,
-                     value=st.session_state.helmet_filters.get(tier, True),
-                     key=key,
-                     on_change=update_helmet_filter,
-                     args=(tier,))
-
-    # Generate loadout
+        col.checkbox(tier, value=st.session_state.helmet_filters.get(tier, True), key=key,
+                     on_change=lambda t=tier: st.session_state.helmet_filters.update({t: st.session_state[f"helmet_cb_{t}"]}))
+    # Generate Loadout
     tab.header("Generate Loadout")
     if tab.button("Generate Loadout"):
         loadout = generate_loadout()
         tab.code(loadout)
-
-        # Save user roll
         user = st.session_state.username
         st.session_state.user_rolls.setdefault(user, []).append(loadout)
         st.session_state.user_rolls[user] = st.session_state.user_rolls[user][-50:]
         save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
         save_user_rolls_github(st.session_state.user_rolls)
 
-
 # ----------------------
-# BUILD CODE MANAGEMENT
+# BUILD CODES TAB
 # ----------------------
 def add_build_code(weapon, new_code, username):
     new_code = new_code.strip()
     if not new_code or not username.strip():
         st.error("Username and code cannot be empty.")
         return
-
-    # Load latest codes
     latest_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
     latest_codes.setdefault(weapon, [])
     st.session_state.build_codes.setdefault(weapon, [])
-
-    # Existing codes
     existing_codes = [c["code"] for c in latest_codes[weapon] if isinstance(c, dict)]
     if new_code not in existing_codes:
-        entry = {
-            "code": new_code,
-            "added_by": username,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
+        entry = {"code": new_code, "added_by": username, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         latest_codes[weapon].append(entry)
         st.session_state.build_codes[weapon] = latest_codes[weapon]
         save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
@@ -496,31 +434,26 @@ def add_build_code(weapon, new_code, username):
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
-
 def build_codes_tab(tab):
     tab.subheader("Build Codes Management")
     username = st.session_state.username
-
-    # Password form for editing
     if not st.session_state.build_codes_authenticated:
-        with st.form("build_code_password_form"):
-            pw_input = st.text_input("Enter password to edit build codes", type="password")
-            pw_submit = st.form_submit_button("Submit")
+        with tab.form("build_code_password_form"):
+            pw_input = tab.text_input("Enter password to edit build codes", type="password")
+            pw_submit = tab.form_submit_button("Submit")
             if pw_submit:
                 if pw_input == BUILD_CODES_PASSWORD:
                     st.session_state.build_codes_authenticated = True
-                    st.success("Password correct! You can now edit build codes.")
+                    tab.success("Password correct! You can now edit build codes.")
                     st.stop()
                 else:
-                    st.error("Incorrect password")
-
+                    tab.error("Incorrect password")
     if st.session_state.build_codes_authenticated:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         weapon_choice = tab.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
         new_code = tab.text_input("Enter new build code")
         if tab.button("Add Code"):
             add_build_code(weapon_choice, new_code, username)
-
         with tab.expander("All Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 tab.markdown(f"**{weapon}**")
@@ -533,51 +466,39 @@ def build_codes_tab(tab):
                 else:
                     tab.markdown("- No codes yet")
 
-
 # ----------------------
-# ADMIN PANEL
+# ADMIN PANEL TAB
 # ----------------------
 def admin_panel_tab(tab):
     tab.header("Admin Panel")
-
     if not st.session_state.admin_authenticated:
-        with st.form("admin_password_form"):
-            admin_pw_input = st.text_input("Enter Admin Password", type="password")
-            admin_submit = st.form_submit_button("Submit Admin Password")
+        with tab.form("admin_password_form"):
+            admin_pw_input = tab.text_input("Enter Admin Password", type="password")
+            admin_submit = tab.form_submit_button("Submit Admin Password")
             if admin_submit:
                 if admin_pw_input == ADMIN_PASSWORD:
                     st.session_state.admin_authenticated = True
-                    st.success("Admin access granted!")
+                    tab.success("Admin access granted!")
                     st.stop()
                 else:
-                    st.error("Incorrect password")
-
+                    tab.error("Incorrect password")
     if st.session_state.admin_authenticated:
-        # Load latest data
         if repo:
             st.session_state.build_codes = load_build_codes_github()
             st.session_state.user_rolls = load_user_rolls_github()
         else:
             st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
             st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
-
-        # Display all build codes
         tab.subheader("All Build Codes")
         rows = []
         for weapon, codes in st.session_state.build_codes.items():
             for entry in codes:
                 if isinstance(entry, dict):
-                    rows.append({
-                        "Weapon": weapon,
-                        "Code": entry.get("code"),
-                        "Added By": entry.get("added_by"),
-                        "Timestamp": entry.get("timestamp")
-                    })
+                    rows.append({"Weapon": weapon, "Code": entry.get("code"), "Added By": entry.get("added_by"), "Timestamp": entry.get("timestamp")})
         if rows:
             tab.dataframe(rows, use_container_width=True)
         else:
             tab.info("No build codes available.")
-
         tab.divider()
         tab.subheader("User Roll History")
         if st.session_state.user_rolls:
@@ -591,23 +512,22 @@ def admin_panel_tab(tab):
         else:
             tab.info("No users found.")
 
-
 # ----------------------
 # MAIN APP TABS
 # ----------------------
 if st.session_state.user_authenticated:
     st.sidebar.write(f"Logged in as: {st.session_state.username}")
-
     tabs_list = ["Randomizer", "Build Codes"]
     if st.session_state.username.lower() == "5ironman":
         tabs_list.append("Admin Panel")
-
     tabs = st.tabs(tabs_list)
-
-    # Attach each tab function
     randomizer_tab(tabs[0])
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
+
+
+
 
 
