@@ -20,8 +20,8 @@ LOCK_FILE = BUILD_CODES_FILE + ".lock"
 USER_LOCK_FILE = USER_ROLLS_FILE + ".lock"
 ACCOUNTS_LOCK_FILE = USER_ACCOUNTS_FILE + ".lock"
 
-BUILD_CODES_PASSWORD = st.secrets["build_codes_password"]
-ADMIN_PASSWORD = st.secrets["admin_password"]
+BUILD_CODES_PASSWORD = st.secrets.get("build_codes_password", "")
+ADMIN_PASSWORD = st.secrets.get("admin_password", "")
 
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", None)
 REPO_NAME = st.secrets.get("REPO_NAME", None)
@@ -42,7 +42,7 @@ def get_github_repo():
 repo = get_github_repo()
 
 # ----------------------
-# LOAD / SAVE FUNCTIONS
+# LOCAL LOAD / SAVE
 # ----------------------
 def load_json_local(file_path, lock_file):
     with FileLock(lock_file):
@@ -55,6 +55,99 @@ def save_json_local(file_path, lock_file, data):
     with FileLock(lock_file):
         with open(file_path, "w") as f:
             json.dump(data, f, indent=4)
+
+# ----------------------
+# GITHUB LOAD / SAVE
+# ----------------------
+def load_build_codes_github():
+    if repo is None: return {}
+    try:
+        file_content = repo.get_contents(BUILD_CODES_FILE)
+        return json.loads(file_content.decoded_content.decode())
+    except Exception:
+        return {}
+
+def save_build_codes_github(codes):
+    if repo is None: return
+    try:
+        try:
+            file = repo.get_contents(BUILD_CODES_FILE)
+            latest_codes = json.loads(file.decoded_content.decode())
+        except UnknownObjectException:
+            file = None
+            latest_codes = {}
+        for weapon, code_list in codes.items():
+            latest_codes.setdefault(weapon, [])
+            for code in code_list:
+                if isinstance(code, dict):
+                    if not any(c.get("code") == code["code"] for c in latest_codes[weapon] if isinstance(c, dict)):
+                        latest_codes[weapon].append(code)
+                else:
+                    if code not in latest_codes[weapon]:
+                        latest_codes[weapon].append(code)
+        content = json.dumps(latest_codes, indent=4)
+        if file:
+            repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
+        else:
+            repo.create_file(BUILD_CODES_FILE, "create build codes", content)
+    except Exception as e:
+        st.warning(f"GitHub save failed: {e}")
+
+def load_user_rolls_github():
+    if repo is None: return {}
+    try:
+        file_content = repo.get_contents(USER_ROLLS_FILE)
+        return json.loads(file_content.decoded_content.decode())
+    except Exception:
+        return {}
+
+def save_user_rolls_github(rolls):
+    if repo is None: return
+    try:
+        try:
+            file = repo.get_contents(USER_ROLLS_FILE)
+            latest_rolls = json.loads(file.decoded_content.decode())
+        except UnknownObjectException:
+            file = None
+            latest_rolls = {}
+        for user, user_roll_list in rolls.items():
+            latest_rolls.setdefault(user, [])
+            for r in user_roll_list:
+                if r not in latest_rolls[user]:
+                    latest_rolls[user].append(r)
+        content = json.dumps(latest_rolls, indent=4)
+        if file:
+            repo.update_file(USER_ROLLS_FILE, "update user rolls", content, sha=file.sha)
+        else:
+            repo.create_file(USER_ROLLS_FILE, "create user rolls", content)
+    except Exception as e:
+        st.warning(f"GitHub save failed: {e}")
+
+def load_user_accounts_github():
+    if repo is None: return {}
+    try:
+        file_content = repo.get_contents(USER_ACCOUNTS_FILE)
+        return json.loads(file_content.decoded_content.decode())
+    except Exception:
+        return {}
+
+def save_user_accounts_github(accounts_dict):
+    if repo is None: return
+    try:
+        try:
+            file = repo.get_contents(USER_ACCOUNTS_FILE)
+            latest_accounts = json.loads(file.decoded_content.decode())
+        except UnknownObjectException:
+            file = None
+            latest_accounts = {}
+        latest_accounts.update(accounts_dict)
+        content = json.dumps(latest_accounts, indent=4)
+        if file:
+            repo.update_file(USER_ACCOUNTS_FILE, "update user accounts", content, sha=file.sha)
+        else:
+            repo.create_file(USER_ACCOUNTS_FILE, "create user accounts", content)
+    except Exception as e:
+        st.warning(f"GitHub save failed: {e}")
 
 # ----------------------
 # COOKIE SETUP
@@ -76,6 +169,11 @@ st.session_state.setdefault("armor_filters", {})
 st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("admin_authenticated", False)
 st.session_state.setdefault("build_codes_authenticated", False)
+
+# Load accounts from GitHub
+if repo:
+    accounts_from_github = load_user_accounts_github()
+    st.session_state.user_accounts.update(accounts_from_github)
 
 accounts = st.session_state.user_accounts
 
@@ -121,9 +219,13 @@ if not st.session_state.user_authenticated:
             else:
                 hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
                 accounts[reg_user] = hashed_pw
-                st.session_state.user_accounts = accounts
-                save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
 
+                # Save locally
+                save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
+                # Save to GitHub
+                save_user_accounts_github(accounts)
+
+                # Auto-login
                 st.session_state.username = reg_user
                 st.session_state.user_authenticated = True
                 cookies["username"] = reg_user
@@ -131,7 +233,6 @@ if not st.session_state.user_authenticated:
 
                 st.success(f"Account created! Logged in as {reg_user}.")
                 st.stop()
-
 # ----------------------
 # SHOW APP ONLY AFTER LOGIN
 # ----------------------
@@ -360,6 +461,7 @@ if st.session_state.user_authenticated:
         with tabs[2]:
             st.header("Admin Panel")
             st.text("Admin controls go here (optional)...")
+
 
 
 
