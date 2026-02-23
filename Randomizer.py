@@ -475,7 +475,7 @@ def build_codes_tab(tab):
     # Password check (inside the tab)
     if not st.session_state.build_codes_authenticated:
         pw_input = tab.text_input("Enter password to edit build codes", type="password")
-        if tab.button("Submit Password"):
+        if tab.button("Submit Password (Press Twice)"):
             if pw_input == BUILD_CODES_PASSWORD:
                 st.session_state.build_codes_authenticated = True
                 tab.success("Password correct! You can now edit build codes.")
@@ -585,6 +585,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
