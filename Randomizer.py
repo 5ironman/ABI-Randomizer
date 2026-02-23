@@ -419,6 +419,8 @@ with tabs[1]:
 if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
     with tabs[2]:
         st.subheader("Admin Panel")
+
+        # --- Admin Password Authentication ---
         if not st.session_state.admin_authenticated:
             with st.form("admin_password_form"):
                 admin_pw_input = st.text_input("Enter Admin Password", type="password")
@@ -429,9 +431,13 @@ if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
                     st.success("Admin access granted!")
                 else:
                     st.error("Incorrect password")
+
         if st.session_state.admin_authenticated:
+            # --- Load Data ---
             st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
             st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+
+            # ---------------------- Build Codes Expander ----------------------
             with st.expander("All Weapon Build Codes"):
                 for weapon, codes in sorted(st.session_state.build_codes.items()):
                     st.markdown(f"**{weapon}**")
@@ -443,44 +449,53 @@ if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
                                 st.markdown(f"- {c}")
                     else:
                         st.markdown("- No codes yet")
+
+            # ---------------------- User Roll History ----------------------
             with st.expander("User Roll History"):
-                search_query = st.text_input("Search Users")
+                search_query = st.text_input("Search Users", key="search_users_admin")
                 for user, rolls in st.session_state.user_rolls.items():
                     if search_query.lower() in user.lower():
                         st.markdown(f"**{user}** ({len(rolls)} rolls)")
-                        for r in rolls[-5:]:
+                        for r in rolls[-5:]:  # Show last 5 rolls
                             st.markdown(f"- {r}")
 
-# ---------------------- View All Users ----------------------
-st.subheader("All Registered Users")
-search_query = st.text_input("Search Users", key="search_users_admin")
-for user, rolls in st.session_state.user_rolls.items():
-    if search_query.lower() in user.lower():
-        st.markdown(f"**{user}** ({len(rolls)} rolls)")
-        for r in rolls[-5:]:  # Show last 5 rolls
-            st.markdown(f"- {r}")
+            # ---------------------- View All Users ----------------------
+            st.subheader("View All Users")
+            for user, rolls in st.session_state.user_rolls.items():
+                st.markdown(f"- **{user}** ({len(rolls)} rolls)")
 
-# ---------------------- Reset User Rolls ----------------------
-st.subheader("Reset User Rolls")
-if st.session_state.user_rolls:
-    user_to_reset = st.selectbox("Select User to Reset Rolls", sorted(st.session_state.user_rolls.keys()), key="reset_user_select")
-    if st.button(f"Reset {user_to_reset}'s Rolls"):
-        st.session_state.user_rolls[user_to_reset] = []
-        save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-        save_user_rolls_github(st.session_state.user_rolls)
-        st.success(f"All rolls for {user_to_reset} have been cleared.")
+            # ---------------------- Reset User Rolls ----------------------
+            st.subheader("Reset User Rolls")
+            if st.session_state.user_rolls:
+                user_to_reset = st.selectbox(
+                    "Select User to Reset Rolls",
+                    sorted(st.session_state.user_rolls.keys()),
+                    key="reset_user_select"
+                )
+                if st.button(f"Reset {user_to_reset}'s Rolls"):
+                    st.session_state.user_rolls[user_to_reset] = []
+                    save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+                    save_user_rolls_github(st.session_state.user_rolls)
+                    st.success(f"All rolls for {user_to_reset} have been cleared.")
 
-# ---------------------- Remove a User Completely ----------------------
-st.subheader("Remove a User")
-if st.session_state.user_rolls:
-    user_to_remove = st.selectbox("Select User to Remove", sorted(st.session_state.user_rolls.keys()), key="remove_user_select")
-    confirm = st.checkbox(f"Are you sure you want to delete {user_to_remove}? This cannot be undone.", key="confirm_delete_user")
-    if st.button(f"Delete {user_to_remove} Completely"):
-        if confirm:
-            st.session_state.user_rolls.pop(user_to_remove, None)
-            cookies.pop("username", None)  # Optional: clear cookie if user is online
-            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-            save_user_rolls_github(st.session_state.user_rolls)
-            st.success(f"User {user_to_remove} has been removed.")
-        else:
-            st.warning("Please check the confirmation box before deleting.")
+            # ---------------------- Remove a User Completely ----------------------
+            st.subheader("Remove a User")
+            if st.session_state.user_rolls:
+                user_to_remove = st.selectbox(
+                    "Select User to Remove",
+                    sorted(st.session_state.user_rolls.keys()),
+                    key="remove_user_select"
+                )
+                confirm = st.checkbox(
+                    f"Are you sure you want to delete {user_to_remove}? This cannot be undone.",
+                    key="confirm_delete_user"
+                )
+                if st.button(f"Delete {user_to_remove} Completely"):
+                    if confirm:
+                        st.session_state.user_rolls.pop(user_to_remove, None)
+                        cookies.pop("username", None)  # Optional: remove cookie if user is online
+                        save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+                        save_user_rolls_github(st.session_state.user_rolls)
+                        st.success(f"User {user_to_remove} has been removed.")
+                    else:
+                        st.warning("Please check the confirmation box before deleting.")
