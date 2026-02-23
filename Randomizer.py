@@ -204,7 +204,7 @@ if "helmet_filters" not in st.session_state:
 # ----------------------
 def generate_loadout():
     weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
-               if st.session_state.weapon_filters[cat]
+               if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
     if not weapons:
         return "No weapons available."
@@ -212,8 +212,8 @@ def generate_loadout():
     category, weapon, caliber = random.choice(weapons)
     ammo = f"{caliber} {random.choice(ammo_data.get(caliber,[caliber]))}"
 
-    armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
-    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
+    armor_tiers = [t for t in armors if st.session_state.armor_filters.get(t, True)]
+    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters.get(t, True)]
     if not armor_tiers or not helmet_tiers:
         return "No armor/helmet tiers available with current filters."
 
@@ -223,7 +223,7 @@ def generate_loadout():
     helmet_tier = random.choice(helmet_tiers)
     helmet_piece = f"{random.choice(helmets[helmet_tier])} ({helmet_tier})"
 
-    backpack = random.choice(Backpacks)
+    backpack = random.choice(Backpacks) if Backpacks else "No backpack"
 
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice(codes) if codes else None
@@ -240,7 +240,7 @@ def generate_loadout():
         f"ARMOR: {armor_piece}",
         f"HELMET: {helmet_piece}",
         f"BACKPACK: {backpack}",
-        f"MAP: {random.choice(['Airport','Farm','Valley','TV','Northridge','Armory'])}",
+        f"MAP: {random.choice(['Airport','Farm','Valley'])}",
         "----------------------"
     ])
     return "\n".join(lines)
@@ -250,28 +250,28 @@ def generate_loadout():
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# --- Weapon filters ---
+# Weapon filters
 st.subheader("Weapon Categories")
 for cat in WEAPONS_DATA:
     st.session_state.weapon_filters[cat] = st.checkbox(
         cat, value=st.session_state.weapon_filters[cat], key=f"weapon_chk_{cat}"
     )
 
-# --- Armor filters ---
+# Armor filters
 st.subheader("Armor Tiers")
 for tier in armors:
     st.session_state.armor_filters[tier] = st.checkbox(
         tier, value=st.session_state.armor_filters[tier], key=f"armor_chk_{tier}"
     )
 
-# --- Helmet filters ---
+# Helmet filters
 st.subheader("Helmet Tiers")
 for tier in helmets:
     st.session_state.helmet_filters[tier] = st.checkbox(
         tier, value=st.session_state.helmet_filters[tier], key=f"helmet_chk_{tier}"
     )
 
-# --- Generate loadout ---
+# Generate loadout
 st.header("Generate Loadout")
 if st.button("Generate Loadout"):
     st.code(generate_loadout())
@@ -281,7 +281,6 @@ if st.button("Generate Loadout"):
 # ----------------------
 st.header("Build Codes")
 
-# --- Add code UI ---
 weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()))
 new_code = st.text_input("New Build Code")
 
@@ -298,6 +297,8 @@ st.button("Add Code", on_click=add_code)
 
 # --- Remove code UI ---
 st.subheader("Existing Build Codes")
+to_remove = None  # store code to remove
+
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
@@ -307,8 +308,16 @@ for weapon, codes in st.session_state.build_codes.items():
         cols[0].text(code)
         remove_key = f"remove_{weapon}_{code}"
         if cols[1].button("Remove", key=remove_key):
-            st.session_state.build_codes[weapon].remove(code)
-            save_build_codes_local(st.session_state.build_codes)
-            save_build_codes_github(st.session_state.build_codes)
-            st.success(f"Removed code '{code}' for {weapon}")
-            break  # Break to prevent iterating over modified list
+            to_remove = (weapon, code)
+
+# After loop, process removal safely
+if to_remove:
+    weapon, code = to_remove
+    if code in st.session_state.build_codes[weapon]:
+        st.session_state.build_codes[weapon].remove(code)
+        save_build_codes_local(st.session_state.build_codes)
+        save_build_codes_github(st.session_state.build_codes)
+        st.success(f"Removed code '{code}' for {weapon}")
+
+
+
