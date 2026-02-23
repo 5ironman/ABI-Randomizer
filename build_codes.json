@@ -4,7 +4,13 @@
     "AK-102": [],
     "FAL": [],
     "SCAR-L": [],
-    "AEK": [],
+    "AEK": [
+        {
+            "code": "Test 5",
+            "added_by": "5ironman incog",
+            "timestamp": "2026-02-23 21:48:14"
+        }
+    ],
     "AK-74N": [],
     "AKM": [],
     "F2000": [],
