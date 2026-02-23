@@ -497,15 +497,23 @@ def build_codes_tab(tab):
         add_build_code(weapon_choice, new_code, username)
 
     # --- Show codes for selected weapon only ---
-    tab.subheader(f"Codes for {weapon_choice}")
-    codes = st.session_state.build_codes.get(weapon_choice, [])
-    if codes:
+    tab.subheader("All Build Codes (Dropdown)")
+    
+    # Flatten all codes across all weapons
+    all_codes = []
+    for codes in st.session_state.build_codes.values():
         for c in codes:
-            # Only show the code itself
-            code_text = c["code"] if isinstance(c, dict) else str(c)
-            tab.markdown(f"- **{code_text}**")
+            if isinstance(c, dict):
+                all_codes.append(c["code"])
+            else:
+                all_codes.append(c)
+    
+    if all_codes:
+        selected_code = tab.selectbox("Select a build code", all_codes, key="all_codes_dropdown")
+        if selected_code:
+            tab.markdown(f"**Selected Build Code:**\n```\n{selected_code}\n```")
     else:
-        tab.markdown("- No codes yet")
+        tab.info("No build codes available")
 
 # ----------------------
 # ADMIN PANEL TAB
@@ -573,6 +581,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
