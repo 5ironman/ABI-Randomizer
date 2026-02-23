@@ -305,19 +305,20 @@ for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
     st.markdown(f"**{weapon}**")
-    for i, code in enumerate(codes):
+    for code in codes:
         cols = st.columns([4, 1])
         cols[0].text(code)
-        remove_key = f"remove_{weapon}_{i}"
+        remove_key = f"remove_{weapon}_{code}"
         if cols[1].button("Remove", key=remove_key):
-            st.session_state.remove_code = (weapon, i)
+            st.session_state.remove_code = (weapon, code)
 
 # --- Process removal immediately ---
 if st.session_state.remove_code:
-    weapon, i = st.session_state.remove_code
-    removed_code = st.session_state.build_codes[weapon].pop(i)
-    save_build_codes_local(st.session_state.build_codes)
-    save_build_codes_github(st.session_state.build_codes)
-    st.success(f"Removed code '{removed_code}' for {weapon}")
+    weapon, code_to_remove = st.session_state.remove_code
+    if code_to_remove in st.session_state.build_codes[weapon]:
+        st.session_state.build_codes[weapon].remove(code_to_remove)
+        save_build_codes_local(st.session_state.build_codes)
+        save_build_codes_github(st.session_state.build_codes)
+        st.success(f"Removed code '{code_to_remove}' for {weapon}")
     st.session_state.remove_code = None
-    st.experimental_rerun()  # rerun immediately to reflect changes
+    st.experimental_rerun()
