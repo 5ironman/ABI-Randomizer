@@ -314,18 +314,22 @@ st.button("Add Code", on_click=add_code)
 # REMOVE BUILD CODES LIVE
 # ----------------------
 st.subheader("Existing Build Codes (uncheck to remove)")
+needs_rerun = False  # Track if we need to rerun after processing all checkboxes
+
 for weapon, codes in sorted(st.session_state.build_codes.items()):
-    if not codes: continue
+    if not codes:
+        continue
     st.markdown(f"**{weapon}**")
     remove_list = []
+
     for code in codes:
-        # Dynamic checkboxes: no session_state for checked
+        # Dynamic checkboxes: always checked by default
         checked = st.checkbox(code, value=True, key=f"{weapon}_code_{code}")
         if not checked:
             remove_list.append(code)
 
     if remove_list:
-        # Load latest codes before removing to merge safely
+        # Load latest codes to merge safely
         latest_codes = load_build_codes_github() if repo else load_build_codes_local()
         for code in remove_list:
             if code in latest_codes.get(weapon, []):
@@ -334,8 +338,11 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.session_state.build_codes[weapon].remove(code)
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
-        st.experimental_rerun()  # Force UI refresh so removed codes disappear
+        needs_rerun = True  # Mark for rerun after iteration
 
+# Rerun once after all checkboxes processed
+if needs_rerun:
+    st.experimental_rerun()
 
 
 
