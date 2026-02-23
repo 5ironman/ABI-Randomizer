@@ -1,116 +1,20 @@
 import streamlit as st
 import json
 import random
-import os
-from github import Github, Auth
+import time
+import uuid
+from collections import Counter
+from github import Github
 from github.GithubException import UnknownObjectException
-from filelock import FileLock
 
-# ----------------------
-# CONFIG
-# ----------------------
-BUILD_CODES_FILE = "build_codes.json"
-LOCK_FILE = BUILD_CODES_FILE + ".lock"
-BUILD_CODES_PASSWORD = "ABI-RANDOM123"
+# -----------------------------
+# ADMIN PASSWORD & CONFIG
+# -----------------------------
+DATA_FILE = "site_data.json"
+ADMIN_PASSWORD = "5ironman17admin"
 
-# ----------------------
-# GITHUB
-# ----------------------
-GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", None)
-REPO_NAME = st.secrets.get("REPO_NAME", None)
-
-def get_github_repo():
-    if not GITHUB_TOKEN or not REPO_NAME:
-        return None
-    try:
-        g = Github(auth=Auth.Token(GITHUB_TOKEN))
-        return g.get_repo(REPO_NAME)
-    except Exception:
-        return None
-
-repo = get_github_repo()
-
-# ----------------------
-# LOAD / SAVE
-# ----------------------
-def load_build_codes_local():
-    with FileLock(LOCK_FILE):
-        if os.path.exists(BUILD_CODES_FILE):
-            with open(BUILD_CODES_FILE, "r") as f:
-                return json.load(f)
-        return {}
-
-def save_build_codes_local(codes):
-    with FileLock(LOCK_FILE):
-        with open(BUILD_CODES_FILE, "w") as f:
-            json.dump(codes, f, indent=4)
-
-def load_build_codes_github():
-    if repo is None:
-        return {}
-    try:
-        file = repo.get_contents(BUILD_CODES_FILE)
-        return json.loads(file.decoded_content.decode())
-    except Exception:
-        return {}
-
-# ----------------------
-# SAFE MULTIUSER SAVE
-# ----------------------
-def save_build_codes_github(codes, retries=3):
-    if repo is None:
-        return
-
-    for _ in range(retries):
-        try:
-            try:
-                file = repo.get_contents(BUILD_CODES_FILE)
-                latest_codes = json.loads(file.decoded_content.decode())
-                sha = file.sha
-            except UnknownObjectException:
-                latest_codes = {}
-                sha = None
-
-            for weapon, code_list in codes.items():
-                latest_codes.setdefault(weapon, [])
-                for code in code_list:
-                    if code not in latest_codes[weapon]:
-                        latest_codes[weapon].append(code)
-
-            content = json.dumps(latest_codes, indent=4)
-
-            if sha:
-                repo.update_file(
-                    BUILD_CODES_FILE,
-                    "update build codes",
-                    content,
-                    sha
-                )
-            else:
-                repo.create_file(
-                    BUILD_CODES_FILE,
-                    "create build codes",
-                    content
-                )
-
-            return
-
-        except Exception:
-            continue
-
-    st.error("GitHub sync failed.")
-
-# ----------------------
-# SESSION STATE
-# ----------------------
-st.session_state.setdefault(
-    "build_codes",
-    load_build_codes_github() if repo else load_build_codes_local()
-)
-
-st.session_state.setdefault("generated_loadout", None)
-st.session_state.setdefault("authenticated", False)
-st.session_state.setdefault("is_admin", False)
+GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN")
+REPO_NAME = st.secrets.get("REPO_NAME")
 
 # ----------------------
 # WEAPONS DATA
@@ -217,204 +121,155 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-# ----------------------
-# FILTERS
-# ----------------------
-if "weapon_filters" not in st.session_state:
-    st.session_state.weapon_filters = {cat: True for cat in WEAPONS_DATA}
+# -----------------------------
+# SESSION STATE INIT
+# -----------------------------
+if "user_id" not in st.session_state:
+    st.session_state.user_id = str(uuid.uuid4())
+    st.session_state.username = f"Player-{st.session_state.user_id[:5]}"
+    st.session_state.armor_filters = list(armors.keys())  # all tiers selected
+    st.session_state.helmet_filters = list(helmets.keys())
 
-if "armor_filters" not in st.session_state:
-    st.session_state.armor_filters = {tier: True for tier in armors}
+if "roll_history" not in st.session_state:
+    st.session_state.roll_history = {}  # per user
 
-if "helmet_filters" not in st.session_state:
-    st.session_state.helmet_filters = {tier: True for tier in helmets}
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
 
-# ----------------------
-# RANDOMIZER
-# ----------------------
+# -----------------------------
+# GITHUB HELPER FUNCTIONS
+# -----------------------------
+def get_github_repo():
+    if not GITHUB_TOKEN or not REPO_NAME:
+        return None
+    try:
+        g = Github(GITHUB_TOKEN)
+        return g.get_repo(REPO_NAME)
+    except Exception:
+        return None
+
+repo = get_github_repo()
+
+def load_data():
+    if repo:
+        try:
+            file_content = repo.get_contents(DATA_FILE)
+            return json.loads(file_content.decoded_content.decode())
+        except UnknownObjectException:
+            return {}
+    else:
+        try:
+            with open(DATA_FILE, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+
+def save_data(data):
+    if repo:
+        try:
+            try:
+                file = repo.get_contents(DATA_FILE)
+                repo.update_file(DATA_FILE, "Update data", json.dumps(data, indent=4), file.sha)
+            except UnknownObjectException:
+                repo.create_file(DATA_FILE, "Create data", json.dumps(data, indent=4))
+        except Exception as e:
+            st.warning(f"GitHub save failed: {e}")
+    else:
+        with open(DATA_FILE, "w") as f:
+            json.dump(data, f, indent=4)
+
+site_data = load_data()
+site_data.setdefault("roll_history", {})
+site_data.setdefault("analytics", {"weapon": Counter(), "armor": Counter(), "helmet": Counter(), "backpack": Counter()})
+
+# -----------------------------
+# LOADOUT GENERATOR
+# -----------------------------
 def generate_loadout():
+    # Weapon + Ammo
+    category = random.choice(list(WEAPONS_DATA.keys()))
+    weapon = random.choice(list(WEAPONS_DATA[category].keys()))
+    caliber = WEAPONS_DATA[category][weapon]
+    ammo = random.choice(ammo_data.get(caliber, [caliber]))
 
-    weapons = [
-        (cat, w, cal)
-        for cat, items in WEAPONS_DATA.items()
-        if st.session_state.weapon_filters.get(cat)
-        for w, cal in items.items()
-    ]
+    # Armor + Helmet respecting filters
+    armor_pool = [a for tier in st.session_state.armor_filters for a in armors.get(tier,[])]
+    helmet_pool = [h for tier in st.session_state.helmet_filters for h in helmets.get(tier,[])]
+    armor_choice = random.choice(armor_pool) if armor_pool else "No Armor"
+    helmet_choice = random.choice(helmet_pool) if helmet_pool else "No Helmet"
 
-    if not weapons:
-        return "No weapons available"
+    backpack_choice = random.choice(backpacks) if backpacks else "No Backpack"
 
-    cat, weapon, cal = random.choice(weapons)
+    roll = {
+        "weapon": weapon,
+        "ammo": ammo,
+        "armor": armor_choice,
+        "helmet": helmet_choice,
+        "backpack": backpack_choice
+    }
 
-    ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
+    # Save to roll history
+    user = st.session_state.username
+    site_data["roll_history"].setdefault(user, [])
+    site_data["roll_history"][user].append(roll)
 
-    armor_tiers = [t for t in armors if st.session_state.armor_filters.get(t)]
-    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters.get(t)]
+    # Update analytics
+    site_data["analytics"]["weapon"][weapon] += 1
+    site_data["analytics"]["armor"][armor_choice] += 1
+    site_data["analytics"]["helmet"][helmet_choice] += 1
+    site_data["analytics"]["backpack"][backpack_choice] += 1
 
-    if not armor_tiers:
-        armor_tiers = list(armors.keys())
+    save_data(site_data)
+    return roll
 
-    if not helmet_tiers:
-        helmet_tiers = list(helmets.keys())
-
-    armor_piece = random.choice(armors[random.choice(armor_tiers)])
-    helmet_piece = random.choice(helmets[random.choice(helmet_tiers)])
-    backpack = random.choice(backpacks)
-
-    codes = st.session_state.build_codes.get(weapon, [])
-    code = random.choice(codes) if codes else None
-
-    lines = [
-        f"CLASS: {cat}",
-        f"WEAPON: {weapon}",
-        f"AMMO: {ammo}"
-    ]
-
-    if code:
-        lines.append(f"BUILD CODE: {code}")
-
-    lines += [
-        f"ARMOR: {armor_piece}",
-        f"HELMET: {helmet_piece}",
-        f"BACKPACK: {backpack}"
-    ]
-
-    return "\n".join(lines)
-
-# ----------------------
-# ADD BUILD CODE
-# ----------------------
-def add_build_code(weapon, new_code):
-
-    new_code = new_code.strip()
-
-    if not new_code:
-        return
-
-    st.session_state.build_codes.setdefault(weapon, [])
-
-    if new_code in st.session_state.build_codes[weapon]:
-        st.warning("Code already exists")
-        return
-
-    st.session_state.build_codes[weapon].append(new_code)
-
-    save_build_codes_local(st.session_state.build_codes)
-    save_build_codes_github(st.session_state.build_codes)
-
-    st.success("Code added")
-
-# ----------------------
-# UI
-# ----------------------
+# -----------------------------
+# STREAMLIT UI
+# -----------------------------
 st.title("ABI Randomizer")
-st.caption("Shared loadout generator")
 
-tab1, tab2, tab3 = st.tabs(["Randomizer","Build Codes","Admin"])
+tab1, tab2 = st.tabs(["Randomizer", "Admin Panel"])
 
-# ----------------------
-# RANDOMIZER TAB
-# ----------------------
+# --- TAB 1: RANDOMIZER ---
 with tab1:
-
-    st.subheader("Weapon Categories")
-
-    for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(
-            cat,
-            value=st.session_state.weapon_filters[cat]
-        )
+    st.header("Select Armor and Helmet Tiers")
+    armor_selected = st.multiselect("Armor Tiers", list(armors.keys()), default=st.session_state.armor_filters)
+    helmet_selected = st.multiselect("Helmet Tiers", list(helmets.keys()), default=st.session_state.helmet_filters)
+    st.session_state.armor_filters = armor_selected
+    st.session_state.helmet_filters = helmet_selected
 
     st.header("Generate Loadout")
+    if st.button("Generate Loadout"):
+        roll = generate_loadout()
+        st.write(f"**Weapon:** {roll['weapon']} ({roll['ammo']})")
+        st.write(f"**Armor:** {roll['armor']}")
+        st.write(f"**Helmet:** {roll['helmet']}")
+        st.write(f"**Backpack:** {roll['backpack']}")
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("Generate"):
-            st.session_state.generated_loadout = generate_loadout()
-
-    with col2:
-        if st.button("Reroll"):
-            st.session_state.generated_loadout = generate_loadout()
-
-    if st.session_state.generated_loadout:
-        st.code(st.session_state.generated_loadout)
-
-# ----------------------
-# BUILD CODES
-# ----------------------
+# --- TAB 2: ADMIN PANEL ---
 with tab2:
-
     if not st.session_state.authenticated:
-
-        pw = st.text_input("Password", type="password")
-
-        if st.button("Unlock"):
-            if pw == BUILD_CODES_PASSWORD:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("Wrong password")
-
-        st.stop()
-
-    weapon_choice = st.selectbox(
-        "Weapon",
-        sorted(st.session_state.build_codes.keys())
-    )
-
-    new_code = st.text_input("New Code")
-
-    if st.button("Add Code"):
-        add_build_code(weapon_choice, new_code)
-
-    st.divider()
-
-    for weapon, codes in st.session_state.build_codes.items():
-
-        if not codes:
-            continue
-
-        st.markdown(f"**{weapon}**")
-
-        for c in codes:
-            st.write("-", c)
-
-# ----------------------
-# ADMIN PANEL
-# ----------------------
-with tab3:
-
-    if not st.session_state.is_admin:
-
-        pw = st.text_input("Admin Password", type="password")
-
+        pw = st.text_input("Enter admin password", type="password")
         if st.button("Login"):
-
-            if pw == BUILD_CODES_PASSWORD:
-                st.session_state.is_admin = True
-                st.rerun()
-
+            if pw == ADMIN_PASSWORD:
+                st.session_state.authenticated = True
+                st.success("Admin access granted")
             else:
-                st.error("Wrong password")
-
+                st.error("Incorrect password")
         st.stop()
 
-    st.success("Admin Access Enabled")
+    st.header("Site Data JSON")
+    st.json(site_data)
 
-    if st.button("Reload Codes From GitHub"):
-        st.session_state.build_codes = load_build_codes_github()
+    st.header("Current Users and Roll History")
+    for user, rolls in site_data["roll_history"].items():
+        st.subheader(user)
+        for r in rolls[-5:]:  # show last 5 rolls
+            st.write(r)
 
-    if st.button("Force Save To GitHub"):
-        save_build_codes_github(st.session_state.build_codes)
-
-    if st.button("Clear Cache"):
-        st.session_state.build_codes = {}
-
-    st.divider()
-
-    total_codes = sum(len(v) for v in st.session_state.build_codes.values())
-
-    st.write("Total Codes:", total_codes)
+    st.header("Analytics")
+    st.write("Most rolled weapons:", site_data["analytics"]["weapon"].most_common(5))
+    st.write("Most rolled armor:", site_data["analytics"]["armor"].most_common(5))
+    st.write("Most rolled helmets:", site_data["analytics"]["helmet"].most_common(5))
+    st.write("Most rolled backpacks:", site_data["analytics"]["backpack"].most_common(5))
 
 
