@@ -132,13 +132,26 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("user_rolls", {})
 
 # ----------------------
-# GLOBAL USERNAME ENFORCEMENT
+# USERNAME PERSISTENCE
 # ----------------------
+# Try to restore from query params
+query_params = st.experimental_get_query_params()
+if "username" in query_params and query_params["username"]:
+    st.session_state.username = query_params["username"][0]
+
 st.title("ABI Randomizer & Build Codes")
+
+# Ask for username if not set
 if not st.session_state.username.strip():
-    st.warning("You must enter a username to access any part of the site.")
-    st.session_state.username = st.text_input("Enter your username to continue:")
-    st.stop()
+    username_input = st.text_input("Enter your username to continue:")
+    if username_input.strip():
+        st.session_state.username = username_input.strip()
+        # Save to query params so refresh keeps username
+        st.experimental_set_query_params(username=st.session_state.username)
+        st.experimental_rerun()
+    else:
+        st.warning("You must enter a username to access any part of the site.")
+        st.stop()
 
 username = st.session_state.username
 
@@ -311,7 +324,7 @@ def add_build_code(weapon, new_code, username):
 # ----------------------
 tab1, tab2, tab3 = st.tabs(["Randomizer", "Build Codes", "Admin Panel"])
 
-# ---------------------- RANDOMIZER TAB ----------------------
+# RANDOMIZER TAB
 with tab1:
     with st.expander("Weapon Categories"):
         for cat in WEAPONS_DATA:
@@ -336,7 +349,7 @@ with tab1:
         save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
         save_user_rolls_github(st.session_state.user_rolls)
 
-# ---------------------- BUILD CODES TAB ----------------------
+# BUILD CODES TAB
 with tab2:
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
@@ -368,7 +381,7 @@ with tab2:
             else:
                 st.markdown("- No codes yet")
 
-# ---------------------- ADMIN PANEL TAB ----------------------
+# ADMIN PANEL TAB
 with tab3:
     if not st.session_state.admin_authenticated:
         admin_pw = st.text_input("Enter Admin Password", type="password")
