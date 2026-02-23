@@ -4,6 +4,7 @@
         "MAP: Valley\nCLASS: Marksman Rifles\nWEAPON: SVDS\nAMMO: 7.62x54mm 7N37\nARMOR: KN Composite Body Armor (Tier 5)\nHELMET: IND200 Helmet (Tier 6)\nBACKPACK: AMP7 Assault Backpack",
         "MAP: Farm\nCLASS: Carbines\nWEAPON: M14\nAMMO: 7.62x51mm M61\nARMOR: IMTV Samurai Full Protection (Tier 3)\nHELMET: D009 Blast Helmet (Tier 3)\nBACKPACK: Sports Backpack",
         "MAP: Farm\nCLASS: Pistols\nWEAPON: M1911\nAMMO: .45 ACP FMJ\nARMOR: 220 Body Armor (Tier 4)\nHELMET: SH12 Military Helmet (Tier 1)\nBACKPACK: LUC Expanded Tactical Backpack",
-        "MAP: Farm\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP FMJ\nARMOR: Retro Sapper Bulletproof Vest (Tier 3)\nHELMET: Tanker Protective Cap (Tier 4)\nBACKPACK: Outdoor Travel Backpack"
+        "MAP: Farm\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP FMJ\nARMOR: Retro Sapper Bulletproof Vest (Tier 3)\nHELMET: Tanker Protective Cap (Tier 4)\nBACKPACK: Outdoor Travel Backpack",
+        "MAP: Northridge\nCLASS: SMGs\nWEAPON: M3A1\nAMMO: .45 ACP AP\nARMOR: KN Composite Body Armor (Tier 4)\nHELMET: SH Matzka 2 Helmet (Tier 1)\nBACKPACK: RUSH Tactical Backpack"
     ]
 }
