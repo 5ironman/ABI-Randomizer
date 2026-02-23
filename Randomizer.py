@@ -303,7 +303,7 @@ tab3_active = tab_selected == "Admin Panel"
 if tab2_active or tab3_active:
     st_autorefresh(interval=REFRESH_INTERVAL_MS, key="auto_refresh")
 
-# --- RANDOMIZER TAB ---
+# ---------------------- RANDOMIZER TAB ----------------------
 if tab1_active:
     st.subheader("Enter Username")
     st.session_state.username = st.text_input("Username", value=st.session_state.username, key="username_input")
@@ -339,7 +339,7 @@ if tab1_active:
             save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
             save_user_rolls_github(st.session_state.user_rolls)
 
-# --- BUILD CODES TAB ---
+# ---------------------- BUILD CODES TAB ----------------------
 if tab2_active:
     st.header("Build Codes Management")
     if not st.session_state.authenticated:
@@ -365,7 +365,7 @@ if tab2_active:
             for code in codes:
                 st.markdown(f"- {code}")
 
-# --- ADMIN PANEL TAB ---
+# ---------------------- ADMIN PANEL TAB ----------------------
 if tab3_active:
     st.header("Admin Panel")
     if not st.session_state.admin_authenticated:
@@ -377,15 +377,28 @@ if tab3_active:
             st.error("Incorrect password")
 
     if st.session_state.admin_authenticated:
-        st.subheader("All Weapon Build Codes")
-        st.code(st.session_state.build_codes)
+        st.subheader("All Weapon Build Codes (Vertical View)")
+        for weapon, codes in sorted(st.session_state.build_codes.items()):
+            if not codes:
+                continue
+            st.markdown(f"**{weapon}**")
+            for code in codes:
+                st.markdown(f"- {code}")
 
+        st.markdown("---")
         st.subheader("User Roll History (Last 5 Rolls)")
         for user, rolls in st.session_state.user_rolls.items():
             st.markdown(f"**{user}** ({len(rolls)} rolls)")
             for r in rolls[-5:]:
                 st.markdown(f"- {r}")
 
+        if st.button("Clear All Roll History", key="clear_rolls_btn"):
+            st.session_state.user_rolls = {}
+            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+            save_user_rolls_github(st.session_state.user_rolls)
+            st.success("All user roll history cleared.")
+
+        st.markdown("---")
         st.subheader("Analytics")
         total_rolls = sum(len(rolls) for rolls in st.session_state.user_rolls.values())
         st.markdown(f"- Total rolls by all users: {total_rolls}")
