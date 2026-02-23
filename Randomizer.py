@@ -347,46 +347,57 @@ for tier in armors:
 for tier in helmets:
     st.session_state.helmet_filters.setdefault(tier, True)
 
-# ----------------------
-# RANDOMIZER FUNCTION
-# ----------------------
-def generate_loadout():
-    global WEAPONS_DATA, ammo_data, armors, helmets, backpacks, MAPS
-    if not MAPS: return "No maps available."
-    map_choice = random.choice(MAPS)
+# --- RANDOMIZER TAB WITH FILTERS ---
+with tabs[0]:
+    st.subheader("Weapon Categories")
+    col1w, col2w = st.columns(2)
 
-    weapons = [(cat, w, cal) 
-               for cat, items in WEAPONS_DATA.items()
-               if st.session_state.weapon_filters.get(cat, True)
-               for w, cal in items.items()]
-    if not weapons: return "No weapons available."
+    # Update function for weapon filters
+    def update_weapon_filter(cat):
+        st.session_state.weapon_filters[cat] = st.session_state[f"weapon_cb_{cat}"]
 
-    cat, weapon, cal = random.choice(weapons)
-    ammo = f"{cal} {random.choice(ammo_data.get(cal, [cal]))}" if cal else "No ammo"
+    # Generate checkboxes for weapon categories
+    for i, cat in enumerate(sorted(WEAPONS_DATA.keys())):
+        key = f"weapon_cb_{cat}"
+        col = col1w if i % 2 == 0 else col2w
+        col.checkbox(cat, value=st.session_state.weapon_filters.get(cat, True), key=key,
+                     on_change=update_weapon_filter, args=(cat,))
 
-    armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
-    helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
-    if not armor_tiers: armor_tiers = list(armors.keys())
-    if not helmet_tiers: helmet_tiers = list(helmets.keys())
+    st.subheader("Armor Tiers")
+    col1a, col2a = st.columns(2)
 
-    armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})" if armors else "No armor"
-    helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})" if helmets else "No helmet"
-    backpack = random.choice(backpacks) if backpacks else "No backpack"
+    def update_armor_filter(tier):
+        st.session_state.armor_filters[tier] = st.session_state[f"armor_cb_{tier}"]
 
-    codes = st.session_state.build_codes.get(weapon, [])
-    code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
+    for i, tier in enumerate(sorted(armors.keys())):
+        key = f"armor_cb_{tier}"
+        col = col1a if i % 2 == 0 else col2a
+        col.checkbox(tier, value=st.session_state.armor_filters.get(tier, True), key=key,
+                     on_change=update_armor_filter, args=(tier,))
 
-    lines = [
-        f"MAP: {map_choice}",
-        f"CLASS: {cat}",
-        f"WEAPON: {weapon}",
-        f"AMMO: {ammo}"
-    ]
-    if code:
-        lines.append(f"BUILD CODE: {code}")
-    lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
+    st.subheader("Helmet Tiers")
+    col1h, col2h = st.columns(2)
 
-    return "\n".join(lines)
+    def update_helmet_filter(tier):
+        st.session_state.helmet_filters[tier] = st.session_state[f"helmet_cb_{tier}"]
+
+    for i, tier in enumerate(sorted(helmets.keys())):
+        key = f"helmet_cb_{tier}"
+        col = col1h if i % 2 == 0 else col2h
+        col.checkbox(tier, value=st.session_state.helmet_filters.get(tier, True), key=key,
+                     on_change=update_helmet_filter, args=(tier,))
+
+    st.header("Generate Loadout")
+    if st.button("Generate Loadout"):
+        loadout = generate_loadout()
+        st.code(loadout)
+
+        # Save user roll
+        user = st.session_state.username
+        st.session_state.user_rolls.setdefault(user, []).append(loadout)
+        st.session_state.user_rolls[user] = st.session_state.user_rolls[user][-50:]
+        save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+        save_user_rolls_github(st.session_state.user_rolls)
 
 # ----------------------
 # BUILD CODE MANAGEMENT
@@ -516,4 +527,5 @@ if st.session_state.user_authenticated:
                                 st.text("No rolls yet.")
                 else:
                     st.info("No users found.")
+
 
