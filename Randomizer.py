@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # CONFIG
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
-REFRESH_INTERVAL_MS = 5000  # 5 seconds
+REFRESH_INTERVAL_MS = 5000  # 5 seconds auto-refresh
 
 # ----------------------
 # AUTO REFRESH
@@ -54,14 +54,8 @@ def load_build_codes_github():
         return {}
 
 def save_build_codes_local(codes):
-    latest_codes = load_build_codes_local()
-    for weapon, code_list in codes.items():
-        latest_codes.setdefault(weapon, [])
-        for code in code_list:
-            if code not in latest_codes[weapon]:
-                latest_codes[weapon].append(code)
     with open(BUILD_CODES_FILE, "w") as f:
-        json.dump(latest_codes, f, indent=4)
+        json.dump(codes, f, indent=4)
 
 def save_build_codes_github(codes):
     if repo is None:
@@ -74,6 +68,7 @@ def save_build_codes_github(codes):
             file = None
             latest_codes = {}
 
+        # Merge new codes without removing others
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
@@ -210,6 +205,7 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
+
 # ----------------------
 # ENSURE BUILD CODE KEYS
 # ----------------------
@@ -240,8 +236,8 @@ def generate_loadout():
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
     armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
     helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
-    armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])}"
-    helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])}"
+    armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})"
+    helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
     backpack = random.choice(backpacks)
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice(codes) if codes else None
@@ -260,7 +256,7 @@ def generate_loadout():
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# --- Weapon filters ---
+# Weapon filters
 st.subheader("Weapon Categories")
 for cat in WEAPONS_DATA:
     st.session_state.weapon_filters[cat] = st.checkbox(
@@ -269,7 +265,7 @@ for cat in WEAPONS_DATA:
         key=f"weapon_{cat}"
     )
 
-# --- Armor filters ---
+# Armor filters
 st.subheader("Armor Tiers")
 for tier in armors:
     st.session_state.armor_filters[tier] = st.checkbox(
@@ -278,7 +274,7 @@ for tier in armors:
         key=f"armor_{tier}"
     )
 
-# --- Helmet filters ---
+# Helmet filters
 st.subheader("Helmet Tiers")
 for tier in helmets:
     st.session_state.helmet_filters[tier] = st.checkbox(
@@ -287,7 +283,7 @@ for tier in helmets:
         key=f"helmet_{tier}"
     )
 
-# --- Generate loadout ---
+# Generate loadout
 st.header("Generate Loadout")
 if st.button("Generate Loadout"):
     st.code(generate_loadout())
@@ -325,7 +321,7 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# Remove codes safely
+# Remove codes safely (merge-safe)
 st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in sorted(st.session_state.build_codes.items()):
     if not codes: continue
@@ -345,8 +341,10 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
         for code in remove_list:
             if code in latest_codes.get(weapon, []):
                 latest_codes[weapon].remove(code)
-            st.session_state.build_codes[weapon].remove(code)
-            del st.session_state.code_checked[weapon][code]
+            if code in st.session_state.build_codes.get(weapon, []):
+                st.session_state.build_codes[weapon].remove(code)
+            if code in st.session_state.code_checked.get(weapon, {}):
+                del st.session_state.code_checked[weapon][code]
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
         st.success(f"Removed {len(remove_list)} code(s) from {weapon}")
