@@ -4,7 +4,8 @@
         "{\n  \"Weapon\": \"T05 (DumDum)\",\n  \"Armor\": \"Marshal Heavy Body Armor\",\n  \"Helmet\": \"6B4 Helmet\",\n  \"Backpack\": \"Canvas Camping Backpack\",\n  \"Map\": \"Northridge\"\n}",
         "{\n  \"Weapon\": \"SPR310 (AP Slug)\",\n  \"Armor\": \"Retro Infantry Bulletproof Vest\",\n  \"Helmet\": \"Motorcycle Helmet\",\n  \"Backpack\": \"Field Camping Backpack\",\n  \"Map\": \"Valley\"\n}",
         "{\n  \"Weapon\": \"Desert Eagle (LFNP)\",\n  \"Armor\": \"PCA350 Body Armor\",\n  \"Helmet\": \"HGB4 Offensive Helmet\",\n  \"Backpack\": \"AMP7 Assault Backpack\",\n  \"Map\": \"TV Station\"\n}",
-        "{\n  \"Weapon\": \"UZI (7N31)\",\n  \"Armor\": \"BT6 Heavy Body Armor\",\n  \"Helmet\": \"6BNT Helmet\",\n  \"Backpack\": \"XA4 Tactical Backpack\",\n  \"Map\": \"Armory\"\n}"
+        "{\n  \"Weapon\": \"UZI (7N31)\",\n  \"Armor\": \"BT6 Heavy Body Armor\",\n  \"Helmet\": \"6BNT Helmet\",\n  \"Backpack\": \"XA4 Tactical Backpack\",\n  \"Map\": \"Armory\"\n}",
+        "**MCX**\n  Ammo: M855A1\n**UZI**\n  Ammo: PST\n**SVTU**\n  Ammo: LPS\n**M110**\n  Ammo: M62\n**Mosin-Nagant**\n  Ammo: T46M\n**SPR310**\n  Ammo: RIP Slug\n**G17**\n  Ammo: 7N31\nArmor (Tier 1): Retro Sapper Bulletproof Vest\nHelmet (Tier 2): Security Helmet\nBackpack: Sling Bag\nMap: Airport"
     ],
     "5ironmanTest": [
         "MAP: Farm\nCLASS: SMGs\nWEAPON: P90\nAMMO: 5.7x28mm L191\nARMOR: Retro Bulletproof Vest (Tier 2)\nHELMET: RSP Heavy Tactical Helmet (Tier 2)\nBACKPACK: Retro Marching Backpack"
