@@ -434,51 +434,51 @@ if "Admin Panel" in tabs_list:
                 else:
                     st.error("Incorrect password")
 
+        # ---- Load Data ----
+        if repo:
+            st.session_state.build_codes = load_build_codes_github()
+            st.session_state.user_rolls = load_user_rolls_github()
+        else:
+            st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+            st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+
+        users = list(st.session_state.user_rolls.keys())
+
         # ================================
-        # ADMIN CONTENT
+        # BUILD CODES DATABASE
         # ================================
-        if st.session_state.get("admin_authenticated", False):
+        st.subheader("All Build Codes")
 
-            # ---- Load Data ----
-            if repo:
-                st.session_state.build_codes = load_build_codes_github()
-                st.session_state.user_rolls = load_user_rolls_github()
-            else:
-                st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
-                st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+        rows = []
 
-            users = list(st.session_state.user_rolls.keys())
-            st.subheader("Build Codes Database")
+        for weapon, codes in st.session_state.build_codes.items():
+            for entry in codes:
+                if isinstance(entry, dict):
+                    rows.append({
+                        "Weapon": weapon,
+                        "Code": entry.get("code"),
+                        "Added By": entry.get("added_by"),
+                        "Timestamp": entry.get("timestamp")
+                    })
 
-rows = []
+        if rows:
+            st.dataframe(rows, use_container_width=True)
+        else:
+            st.info("No build codes available.")
 
-for weapon, codes in st.session_state.build_codes.items():
-    for entry in codes:
-        if isinstance(entry, dict):
-            rows.append({
-                "Weapon": weapon,
-                "Code": entry.get("code"),
-                "Added By": entry.get("added_by"),
-                "Timestamp": entry.get("timestamp")
-            })
+        st.divider()
 
-if rows:
-    st.dataframe(rows, use_container_width=True)
-else:
-    st.info("No build codes available.")
+        # ================================
+        # VIEW USERS
+        # ================================
+        st.subheader("All Users")
 
-            
-            # ---------------- USERS ----------------
-            st.subheader("All Users")
-
-            if users:
-                for user in users:
-                    count = len(st.session_state.user_rolls[user])
-                    st.write(f"{user} — {count} rolls")
-            else:
-                st.info("No users found.")
-
-            st.divider()
+        if users:
+            for user in users:
+                count = len(st.session_state.user_rolls[user])
+                st.write(f"{user} — {count} rolls")
+        else:
+            st.info("No users found.")
 
             # ---------------- RESET ROLLS ----------------
             st.subheader("Reset User Rolls")
@@ -534,5 +534,6 @@ else:
 
                     else:
                         st.warning("Please confirm deletion first.")
+
 
 
