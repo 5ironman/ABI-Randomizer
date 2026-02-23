@@ -6,7 +6,6 @@ from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from filelock import FileLock
 import pandas as pd
-import matplotlib.pyplot as plt
 
 # ----------------------
 # CONFIG
@@ -232,7 +231,6 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-
 # Ensure all weapons have a build code list
 for cat in WEAPONS_DATA.values():
     st.session_state.build_codes.update({w: [] for w in cat if w not in st.session_state.build_codes})
@@ -300,20 +298,19 @@ with tab1:
     else:
         st.subheader("Weapon Categories")
         for cat in WEAPONS_DATA:
-            st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat])
+            st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
         st.subheader("Armor Tiers")
         for tier in armors:
-            st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier])
+            st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
         st.subheader("Helmet Tiers")
         for tier in helmets:
-            st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier])
+            st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
 
         st.header("Generate Loadout")
         if st.button("Generate Loadout"):
             loadout = generate_loadout()
             st.code(loadout)
             user = st.session_state.username
-            # Load latest rolls first
             st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
             st.session_state.user_rolls.setdefault(user, []).append(loadout)
             save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
@@ -331,13 +328,11 @@ with tab2:
             else:
                 st.error("Incorrect password")
     else:
-        # Reload latest codes
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
         new_code = st.text_input("Enter new build code")
         if st.button("Add Code"):
             add_build_code(weapon_choice, new_code)
-
         with st.expander("All Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
@@ -359,7 +354,6 @@ with tab3:
             st.error("Incorrect password")
 
     if st.session_state.admin_authenticated:
-        # Reload latest data
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
@@ -381,7 +375,6 @@ with tab3:
                         st.markdown(f"- {r}")
 
         with st.expander("Analytics"):
-            # Top weapons
             weapon_count = {}
             ammo_count = {}
             for rolls in st.session_state.user_rolls.values():
@@ -401,8 +394,7 @@ with tab3:
 
             if ammo_count:
                 st.subheader("Ammo Distribution")
-                fig, ax = plt.subplots()
-                ax.pie(ammo_count.values(), labels=ammo_count.keys(), autopct='%1.1f%%')
-                ax.set_title("Roll Distribution by Ammo Type")
-                st.pyplot(fig)
+                ammo_df = pd.DataFrame(list(ammo_count.items()), columns=["Ammo", "Count"]).set_index("Ammo")
+                st.bar_chart(ammo_df)
+
 
