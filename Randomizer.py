@@ -146,7 +146,7 @@ if saved_username:
     st.session_state.username = saved_username
 elif not st.session_state.username:
     with st.form("username_form"):
-        username_input = st.text_input("Enter your username to continue (Press Submit Twice):")
+        username_input = st.text_input("Enter your username to continue:")
         submitted = st.form_submit_button("Submit")
     if submitted:
         username_input = username_input.strip()
@@ -335,7 +335,13 @@ def add_build_code(weapon, new_code, username):
 # ----------------------
 # STREAMLIT UI WITH TABS
 # ----------------------
-tab1, tab2, tab3 = st.tabs(["Randomizer", "Build Codes", "Admin Panel"])
+tabs_list = ["Randomizer", "Build Codes"]
+if st.session_state.username.lower() == "5ironman":
+    tabs_list.append("Admin Panel")
+tabs = st.tabs(tabs_list)
+tab1 = tabs[0]
+tab2 = tabs[1]
+tab3 = tabs[2] if len(tabs) > 2 else None
 
 # ---------------------- RANDOMIZER TAB ----------------------
 with tab1:
@@ -368,9 +374,8 @@ with tab2:
 
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
-            pw_input = st.text_input("Enter password to edit build codes (Press Submit Twice)", type="password")
+            pw_input = st.text_input("Enter password to edit build codes", type="password")
             pw_submit = st.form_submit_button("Submit Password")
-
         if pw_submit:
             if pw_input == BUILD_CODES_PASSWORD:
                 st.session_state.authenticated = True
@@ -398,14 +403,13 @@ with tab2:
                     st.markdown("- No codes yet")
 
 # ---------------------- ADMIN PANEL TAB ----------------------
-with tab3:
+if tab3 and st.session_state.username.lower() == "5ironman":
     st.subheader("Admin Panel")
 
     if not st.session_state.admin_authenticated:
         with st.form("admin_password_form"):
             admin_pw_input = st.text_input("Enter Admin Password", type="password")
             admin_submit = st.form_submit_button("Submit Admin Password")
-
         if admin_submit:
             if admin_pw_input == ADMIN_PASSWORD:
                 st.session_state.admin_authenticated = True
@@ -436,10 +440,5 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
-
-
-
-
-
 
 
