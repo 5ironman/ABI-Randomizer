@@ -303,7 +303,7 @@ with tab1:
 
 # --- TAB 2 ---
 with tab2:
-    # Handle safe rerun after removal
+    # Safe rerun after any removal
     if st.session_state.get("build_codes_updated", False):
         st.session_state.build_codes_updated = False
         st.experimental_rerun()
