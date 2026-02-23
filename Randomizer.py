@@ -538,7 +538,7 @@ def admin_panel_tab(tab):
             st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
     if st.session_state.admin_authenticated:
-        st.subheader("All Build Codes")
+        tab.subheader("All Build Codes")  
         rows = []
         for weapon, codes in st.session_state.build_codes.items():
             for entry in codes:
@@ -576,6 +576,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
