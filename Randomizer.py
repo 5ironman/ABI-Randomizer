@@ -36,7 +36,7 @@ def get_github_repo():
 repo = get_github_repo()
 
 # ----------------------
-# LOAD / SAVE
+# LOAD / SAVE BUILD CODES
 # ----------------------
 def load_build_codes_local():
     if os.path.exists(BUILD_CODES_FILE):
@@ -210,7 +210,6 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-
 # ----------------------
 # ENSURE BUILD CODE KEYS
 # ----------------------
@@ -232,10 +231,11 @@ if "helmet_filters" not in st.session_state:
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    weapons = [(cat,w,cal) for cat, items in WEAPONS_DATA.items()
-               if st.session_state.weapon_filters.get(cat,True)
+    weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
+               if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
-    if not weapons: return "No weapons available."
+    if not weapons:
+        return "No weapons available."
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
     armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
@@ -243,10 +243,15 @@ def generate_loadout():
     armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])}"
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])}"
     backpack = random.choice(backpacks)
-    codes = st.session_state.build_codes.get(weapon,[])
+    codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice(codes) if codes else None
-    lines = [f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
-    if code: lines.append(f"BUILD CODE: {code}")
+    lines = [
+        f"CLASS: {cat}",
+        f"WEAPON: {weapon}",
+        f"AMMO: {ammo}"
+    ]
+    if code:
+        lines.append(f"BUILD CODE: {code}")
     lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
     return "\n".join(lines)
 
@@ -258,17 +263,29 @@ st.title("ABI Randomizer & Build Codes")
 # --- Weapon filters ---
 st.subheader("Weapon Categories")
 for cat in WEAPONS_DATA:
-    st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat])
+    st.session_state.weapon_filters[cat] = st.checkbox(
+        cat,
+        value=st.session_state.weapon_filters[cat],
+        key=f"weapon_{cat}"
+    )
 
 # --- Armor filters ---
 st.subheader("Armor Tiers")
 for tier in armors:
-    st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier])
+    st.session_state.armor_filters[tier] = st.checkbox(
+        tier,
+        value=st.session_state.armor_filters[tier],
+        key=f"armor_{tier}"
+    )
 
 # --- Helmet filters ---
 st.subheader("Helmet Tiers")
 for tier in helmets:
-    st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier])
+    st.session_state.helmet_filters[tier] = st.checkbox(
+        tier,
+        value=st.session_state.helmet_filters[tier],
+        key=f"helmet_{tier}"
+    )
 
 # --- Generate loadout ---
 st.header("Generate Loadout")
@@ -279,14 +296,18 @@ if st.button("Generate Loadout"):
 # BUILD CODE EDITOR
 # ----------------------
 st.header("Build Codes")
-weapon_choice = st.selectbox("Weapon", sorted(st.session_state.build_codes.keys()))
+weapon_choice = st.selectbox(
+    "Weapon",
+    sorted(st.session_state.build_codes.keys()),
+    key="weapon_select"
+)
 new_code = st.text_input("New Build Code", key="new_code_input")
 
 # Initialize checkbox tracking
 if "code_checked" not in st.session_state:
     st.session_state.code_checked = {}
 for weapon, codes in st.session_state.build_codes.items():
-    st.session_state.code_checked.setdefault(weapon,{})
+    st.session_state.code_checked.setdefault(weapon, {})
     for code in codes:
         st.session_state.code_checked[weapon].setdefault(code, True)
 
@@ -296,11 +317,11 @@ def add_code():
     weapon = weapon_choice
     if code and code not in st.session_state.build_codes[weapon]:
         st.session_state.build_codes[weapon].append(code)
-        st.session_state.code_checked.setdefault(weapon,{})[code]=True
+        st.session_state.code_checked.setdefault(weapon, {})[code] = True
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
         st.success(f"Added '{code}'")
-        st.session_state.new_code_input=""
+        st.session_state.new_code_input = ""
 
 st.button("Add Code", on_click=add_code)
 
@@ -309,15 +330,20 @@ st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in sorted(st.session_state.build_codes.items()):
     if not codes: continue
     st.markdown(f"**{weapon}**")
-    remove_list=[]
+    remove_list = []
     for code in codes:
-        checked = st.checkbox(code,value=st.session_state.code_checked[weapon][code],key=f"{weapon}_{code}")
+        checked = st.checkbox(
+            code,
+            value=st.session_state.code_checked[weapon][code],
+            key=f"{weapon}_code_{code}"
+        )
         st.session_state.code_checked[weapon][code] = checked
-        if not checked: remove_list.append(code)
+        if not checked:
+            remove_list.append(code)
     if remove_list:
         latest_codes = load_build_codes_github() if repo else load_build_codes_local()
         for code in remove_list:
-            if code in latest_codes.get(weapon,[]):
+            if code in latest_codes.get(weapon, []):
                 latest_codes[weapon].remove(code)
             st.session_state.build_codes[weapon].remove(code)
             del st.session_state.code_checked[weapon][code]
