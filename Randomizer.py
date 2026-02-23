@@ -1,7 +1,50 @@
 import streamlit as st
-import random
 import json
-import os
+import random
+from github import Github
+
+# --- GitHub setup ---
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+REPO_NAME = "yourusername/yourrepo"
+FILE_PATH = "build_codes.json"
+
+g = Github(GITHUB_TOKEN)
+repo = g.get_repo(REPO_NAME)
+
+def load_build_codes_from_github():
+    try:
+        file_content = repo.get_contents(FILE_PATH)
+        return json.loads(file_content.decoded_content.decode())
+    except:
+        return {}  # return empty dict if file not found
+
+def save_build_codes_to_github(build_codes, commit_message="Update build codes"):
+    try:
+        try:
+            file = repo.get_contents(FILE_PATH)
+            repo.update_file(FILE_PATH, commit_message, json.dumps(build_codes, indent=4), file.sha)
+        except:
+            repo.create_file(FILE_PATH, commit_message, json.dumps(build_codes, indent=4))
+    except Exception as e:
+        st.error(f"Error saving to GitHub: {e}")
+
+# --- Load build codes from GitHub ---
+build_codes = load_build_codes_from_github()
+
+# --- Streamlit UI ---
+st.header("Edit Build Codes")
+
+weapon_choice = st.selectbox("Select Weapon", list(build_codes.keys()))
+new_code = st.text_input("Enter New Build Code")
+
+if st.button("Add Build Code"):
+    if new_code:
+        build_codes[weapon_choice].append(new_code)
+        save_build_codes_to_github(build_codes, commit_message=f"Added build code {new_code} to {weapon_choice}")
+        st.success(f"Added build code {new_code} to {weapon_choice}")
+
+st.subheader("Current Build Codes")
+st.json(build_codes)
 
 # Module-level build codes so the GUI can view and edit them
 build_codes = {
