@@ -281,6 +281,7 @@ st.header("Build Codes")
 weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()), key="weapon_choice")
 new_code = st.text_input("New Build Code", key="new_code")
 
+# Add Code Function
 def add_code():
     code = st.session_state.new_code
     weapon = st.session_state.weapon_choice
@@ -292,4 +293,18 @@ def add_code():
         st.success("Build code added")
 
 st.button("Add Code", on_click=add_code, key="add_code_btn")
+
+# Display existing codes with remove buttons
+st.subheader(f"Existing Build Codes for {weapon_choice}")
+codes = st.session_state.build_codes.get(weapon_choice, [])
+for i, code in enumerate(codes):
+    cols = st.columns([4, 1])
+    cols[0].text(code)
+    remove_key = f"remove_{weapon_choice}_{i}"
+    if cols[1].button("Remove", key=remove_key):
+        st.session_state.build_codes[weapon_choice].pop(i)
+        save_build_codes_local(st.session_state.build_codes)
+        save_build_codes_github(st.session_state.build_codes)
+        st.experimental_rerun()  # Refresh to update the UI
+
 st.json(st.session_state.build_codes)
