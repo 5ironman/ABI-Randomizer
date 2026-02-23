@@ -1,0 +1,27 @@
+{
+    "roll_history": {
+        "Player-0b6f9": [
+            {
+                "weapon": "MAC-10",
+                "ammo": "AP",
+                "armor": "H-LC Tactical Body Armor",
+                "helmet": "SH60 Military Helmet",
+                "backpack": "Retro Marching Backpack"
+            }
+        ]
+    },
+    "analytics": {
+        "weapon": {
+            "MAC-10": 1
+        },
+        "armor": {
+            "H-LC Tactical Body Armor": 1
+        },
+        "helmet": {
+            "SH60 Military Helmet": 1
+        },
+        "backpack": {
+            "Retro Marching Backpack": 1
+        }
+    }
+}
