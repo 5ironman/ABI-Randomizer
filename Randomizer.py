@@ -418,7 +418,6 @@ with tabs[1]:
 # ---------------------- ADMIN TAB ----------------------
 if "Admin Panel" in tabs_list:
     with tabs[2]:
-
         st.header("Admin Panel")
 
         # --- Admin Password Authentication ---
@@ -430,110 +429,98 @@ if "Admin Panel" in tabs_list:
             if admin_submit:
                 if admin_pw_input == ADMIN_PASSWORD:
                     st.session_state.admin_authenticated = True
+                    st.success("Admin access granted!")
                     st.rerun()
                 else:
                     st.error("Incorrect password")
 
-        # ---- Load Data ----
-        if repo:
-            st.session_state.build_codes = load_build_codes_github()
-            st.session_state.user_rolls = load_user_rolls_github()
-        else:
-            st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
-            st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+        # --- Admin content ---
+        if st.session_state.get("admin_authenticated", False):
 
-        users = list(st.session_state.user_rolls.keys())
+            # ---- Load Data ----
+            if repo:
+                st.session_state.build_codes = load_build_codes_github()
+                st.session_state.user_rolls = load_user_rolls_github()
+            else:
+                st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+                st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
-        # ================================
-        # BUILD CODES DATABASE
-        # ================================
-        st.subheader("All Build Codes")
+            users = list(st.session_state.user_rolls.keys())
 
-        rows = []
+            # ================================
+            # BUILD CODES DATABASE
+            # ================================
+            st.subheader("All Build Codes")
+            rows = []
+            for weapon, codes in st.session_state.build_codes.items():
+                for entry in codes:
+                    if isinstance(entry, dict):
+                        rows.append({
+                            "Weapon": weapon,
+                            "Code": entry.get("code"),
+                            "Added By": entry.get("added_by"),
+                            "Timestamp": entry.get("timestamp")
+                        })
+            if rows:
+                st.dataframe(rows, use_container_width=True)
+            else:
+                st.info("No build codes available.")
 
-        for weapon, codes in st.session_state.build_codes.items():
-            for entry in codes:
-                if isinstance(entry, dict):
-                    rows.append({
-                        "Weapon": weapon,
-                        "Code": entry.get("code"),
-                        "Added By": entry.get("added_by"),
-                        "Timestamp": entry.get("timestamp")
-                    })
+            st.divider()
 
-        if rows:
-            st.dataframe(rows, use_container_width=True)
-        else:
-            st.info("No build codes available.")
-
-        st.divider()
-
-        # ================================
-        # VIEW USERS
-        # ================================
-        st.subheader("All Users")
-
-        if users:
-            for user in users:
-                count = len(st.session_state.user_rolls[user])
-                st.write(f"{user} — {count} rolls")
-        else:
-            st.info("No users found.")
-
-            # ---------------- RESET ROLLS ----------------
-            st.subheader("Reset User Rolls")
-
+            # ================================
+            # VIEW USERS
+            # ================================
+            st.subheader("All Users")
             if users:
+                for user in users:
+                    count = len(st.session_state.user_rolls[user])
+                    st.write(f"{user} — {count} rolls")
+            else:
+                st.info("No users found.")
 
+            st.divider()
+
+            # ================================
+            # RESET USER ROLLS
+            # ================================
+            st.subheader("Reset User Rolls")
+            if users:
                 reset_user = st.selectbox(
                     "Select User",
                     users,
                     key="admin_reset_user"
                 )
-
                 if st.button("Reset Rolls"):
-
                     st.session_state.user_rolls[reset_user] = []
-
                     if repo:
                         save_user_rolls_github(st.session_state.user_rolls)
                     else:
                         save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-
                     st.success(f"{reset_user}'s rolls reset.")
                     st.rerun()
 
             st.divider()
 
-            # ---------------- DELETE USER ----------------
+            # ================================
+            # DELETE USER
+            # ================================
             st.subheader("Delete User Completely")
-
             if users:
-
                 delete_user = st.selectbox(
                     "Select User to Delete",
                     users,
                     key="admin_delete_user"
                 )
-
                 confirm_delete = st.checkbox("Confirm permanent deletion")
-
                 if st.button("Delete User"):
-
                     if confirm_delete:
-
                         st.session_state.user_rolls.pop(delete_user, None)
-
                         if repo:
                             save_user_rolls_github(st.session_state.user_rolls)
                         else:
                             save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-
                         st.success(f"{delete_user} deleted.")
                         st.rerun()
-
                     else:
                         st.warning("Please confirm deletion first.")
-
-
-
