@@ -501,10 +501,9 @@ def build_codes_tab(tab):
     codes = st.session_state.build_codes.get(weapon_choice, [])
     if codes:
         for c in codes:
-            if isinstance(c, dict):
-                tab.markdown(f"- **{c['code']}** (added by {c['added_by']} at {c['timestamp']})")
-            else:
-                tab.markdown(f"- **{c}**")
+            # Only show the code itself
+            code_text = c["code"] if isinstance(c, dict) else str(c)
+            tab.markdown(f"- **{code_text}**")
     else:
         tab.markdown("- No codes yet")
 
@@ -573,6 +572,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
