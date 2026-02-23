@@ -1,18 +1,21 @@
-
-
-
 import streamlit as st
 import json
 import random
 import os
 from github import Github, Auth
 from github.GithubException import UnknownObjectException
+from streamlit_autorefresh import st_autorefresh
 
 # ----------------------
 # CONFIG
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
-REFRESH_INTERVAL_MS = 5000  # auto-refresh every 5 seconds
+REFRESH_INTERVAL_MS = 5000  # 5 seconds
+
+# ----------------------
+# AUTO REFRESH
+# ----------------------
+st_autorefresh(interval=REFRESH_INTERVAL_MS, key="auto_refresh")
 
 # ----------------------
 # GITHUB
@@ -94,12 +97,6 @@ def save_build_codes_github(codes):
             )
     except Exception as e:
         st.warning(f"GitHub save failed: {e}")
-
-# ----------------------
-# AUTO REFRESH
-# ----------------------
-st_autorefresh = st.experimental_data_editor if hasattr(st, "experimental_data_editor") else st.experimental_rerun
-st_autorefresh(interval=REFRESH_INTERVAL_MS)
 
 # ----------------------
 # SESSION STATE
@@ -212,8 +209,10 @@ backpacks = [
     "Chapman Military Backpack", "AMP7 Assault Backpack", "Retro Marching Backpack", "LUC Expanded Tactical Backpack",
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
+
+
 # ----------------------
-# ENSURE BUILD CODES
+# ENSURE BUILD CODE KEYS
 # ----------------------
 for cat in WEAPONS_DATA.values():
     for weapon in cat:
@@ -239,9 +238,8 @@ def generate_loadout():
     if not weapons: return "No weapons available."
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
-    armor_tiers = [t for t in armors if st.session_state.armor_filters.get(t,True)]
-    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters.get(t,True)]
-    if not armor_tiers or not helmet_tiers: return "No armor/helmet tiers available."
+    armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
+    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
     armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])}"
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])}"
     backpack = random.choice(backpacks)
@@ -253,29 +251,32 @@ def generate_loadout():
     return "\n".join(lines)
 
 # ----------------------
-# UI
+# STREAMLIT UI
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# Filters
+# --- Weapon filters ---
 st.subheader("Weapon Categories")
 for cat in WEAPONS_DATA:
-    st.session_state.weapon_filters[cat] = st.checkbox(cat,value=st.session_state.weapon_filters[cat],key=f"weapon_{cat}")
+    st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat])
 
+# --- Armor filters ---
 st.subheader("Armor Tiers")
 for tier in armors:
-    st.session_state.armor_filters[tier] = st.checkbox(tier,value=st.session_state.armor_filters[tier],key=f"armor_{tier}")
+    st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier])
 
+# --- Helmet filters ---
 st.subheader("Helmet Tiers")
 for tier in helmets:
-    st.session_state.helmet_filters[tier] = st.checkbox(tier,value=st.session_state.helmet_filters[tier],key=f"helmet_{tier}")
+    st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier])
 
+# --- Generate loadout ---
 st.header("Generate Loadout")
 if st.button("Generate Loadout"):
     st.code(generate_loadout())
 
 # ----------------------
-# Build Code Editor
+# BUILD CODE EDITOR
 # ----------------------
 st.header("Build Codes")
 weapon_choice = st.selectbox("Weapon", sorted(st.session_state.build_codes.keys()))
@@ -289,7 +290,7 @@ for weapon, codes in st.session_state.build_codes.items():
     for code in codes:
         st.session_state.code_checked[weapon].setdefault(code, True)
 
-# Add code
+# Add code safely
 def add_code():
     code = st.session_state.new_code_input.strip()
     weapon = weapon_choice
@@ -303,7 +304,7 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# Remove codes
+# Remove codes safely
 st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in sorted(st.session_state.build_codes.items()):
     if not codes: continue
@@ -323,3 +324,4 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
         st.success(f"Removed {len(remove_list)} code(s) from {weapon}")
+
