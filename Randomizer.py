@@ -106,7 +106,6 @@ st.session_state.setdefault("weapon_filters", {})
 st.session_state.setdefault("armor_filters", {})
 st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("authenticated", False)
-st.session_state.setdefault("codes_to_remove", [])
 
 # ----------------------
 # WEAPONS DATA
@@ -213,6 +212,7 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
+
 # ----------------------
 # ENSURE BUILD CODE KEYS
 # ----------------------
@@ -251,7 +251,7 @@ def generate_loadout():
     return "\n".join(lines)
 
 # ----------------------
-# MULTI-USER SAFE ADD
+# MULTI-USER SAFE ADD / REMOVE
 # ----------------------
 def add_build_code(weapon, new_code):
     new_code = new_code.strip()
@@ -269,9 +269,6 @@ def add_build_code(weapon, new_code):
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
-# ----------------------
-# MULTI-USER SAFE REMOVE
-# ----------------------
 def remove_build_codes(weapon, codes_to_remove):
     if not codes_to_remove:
         return
@@ -292,28 +289,13 @@ tab1, tab2 = st.tabs(["Randomizer","Build Codes"])
 with tab1:
     st.subheader("Weapon Categories")
     for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(
-            cat, 
-            value=st.session_state.weapon_filters[cat],
-            key=f"weapon_{cat}"
-        )
-
+        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
     st.subheader("Armor Tiers")
     for tier in armors:
-        st.session_state.armor_filters[tier] = st.checkbox(
-            tier, 
-            value=st.session_state.armor_filters[tier],
-            key=f"armor_{tier}"
-        )
-
+        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
     st.subheader("Helmet Tiers")
     for tier in helmets:
-        st.session_state.helmet_filters[tier] = st.checkbox(
-            tier, 
-            value=st.session_state.helmet_filters[tier],
-            key=f"helmet_{tier}"
-        )
-
+        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
     st.header("Generate Loadout")
     if st.button("Generate Loadout"):
         st.code(generate_loadout())
@@ -322,6 +304,7 @@ with tab1:
 with tab2:
     st.header("Build Codes Management")
 
+    # PASSWORD CHECK
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
         if st.button("Submit Password"):
@@ -332,33 +315,26 @@ with tab2:
                 st.error("Incorrect password")
         st.stop()
 
-    weapon_choice = st.selectbox("Select Weapon", sorted(st.session_state.build_codes.keys()))
+    # Select weapon to add code
+    weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
 
-    # ADD
-    st.subheader("Add Build Code")
-    new_code = st.text_input("Enter new build code")
-    if st.button("Add Code"):
+    st.subheader(f"Add Build Code to {weapon_choice}")
+    new_code = st.text_input("Enter new build code", key="new_code_input")
+    if st.button("Add Code", key="add_code_btn"):
         add_build_code(weapon_choice, new_code)
 
-    # REMOVE
-    st.subheader("Remove Build Codes")
-    current_codes = st.session_state.build_codes.get(weapon_choice, [])
-    if current_codes:
-        st.session_state.codes_to_remove = st.multiselect(
-            f"Select codes to remove from {weapon_choice}",
-            current_codes,
-            default=st.session_state.codes_to_remove,
-            key="remove_multiselect"
-        )
-        if st.button("Remove Selected Codes"):
-            remove_build_codes(weapon_choice, st.session_state.codes_to_remove)
-            st.session_state.codes_to_remove = []
-            st.experimental_rerun()
-    else:
-        st.info(f"No build codes for {weapon_choice}")
+    st.markdown("---")
+    st.subheader("All Build Codes")
 
-    # DEBUG
-    st.subheader("Current Codes (DEBUG)")
-    st.write(st.session_state.build_codes.get(weapon_choice, []))
-
+    # Show all build codes for each weapon with remove buttons
+    for weapon, codes in sorted(st.session_state.build_codes.items()):
+        if not codes:
+            continue
+        st.markdown(f"**{weapon}**")
+        for code in codes:
+            cols = st.columns([0.8,0.2])
+            cols[0].markdown(f"- {code}")
+            if cols[1].button("Remove", key=f"remove_{weapon}_{code}"):
+                remove_build_codes(weapon, [code])
+                st.experimental_rerun()
 
