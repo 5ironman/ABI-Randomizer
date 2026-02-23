@@ -146,7 +146,7 @@ if saved_username:
     st.session_state.username = saved_username
 elif not st.session_state.username:
     with st.form("username_form"):
-        username_input = st.text_input("Enter your username to continue:")
+        username_input = st.text_input("Enter your username to continue (Press Submit Twice):")
         submitted = st.form_submit_button("Submit")
     if submitted:
         username_input = username_input.strip()
@@ -368,7 +368,7 @@ with tab2:
 
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
-            pw_input = st.text_input("Enter password to edit build codes", type="password")
+            pw_input = st.text_input("Enter password to edit build codes (Press Submit Twice)", type="password")
             pw_submit = st.form_submit_button("Submit Password")
 
         if pw_submit:
@@ -436,6 +436,7 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
+
 
 
 
