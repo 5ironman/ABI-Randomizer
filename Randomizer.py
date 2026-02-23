@@ -41,7 +41,107 @@ def get_github_repo():
 repo = get_github_repo()
 
 # ----------------------
-# GITHUB LOAD / SAVE
+# LOAD / SAVE FUNCTIONS
+# ----------------------
+def load_json_local(file_path, lock_file):
+    with FileLock(lock_file):
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
+                return json.load(f)
+        return {}
+
+def save_json_local(file_path, lock_file, data):
+    with FileLock(lock_file):
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=4)
+
+# ----------------------
+# COOKIE SETUP
+# ----------------------
+cookies = EncryptedCookieManager(prefix="abi_random_", password="YOUR_SECRET_KEY_HERE")
+if not cookies.ready():
+    st.stop()
+
+# ----------------------
+# SESSION STATE INIT
+# ----------------------
+st.session_state.setdefault("build_codes", load_json_local(BUILD_CODES_FILE, LOCK_FILE))
+st.session_state.setdefault("weapon_filters", {})
+st.session_state.setdefault("armor_filters", {})
+st.session_state.setdefault("helmet_filters", {})
+st.session_state.setdefault("authenticated", False)
+st.session_state.setdefault("admin_authenticated", False)
+st.session_state.setdefault("build_codes_authenticated", False)
+st.session_state.setdefault("username", "")
+st.session_state.setdefault("user_rolls", load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
+st.session_state.setdefault("user_accounts", load_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE))
+
+# Initialize accounts variable for login/register
+accounts = st.session_state.user_accounts
+
+# ----------------------
+# PERSISTENT LOGIN FROM COOKIE
+# ----------------------
+username_cookie = cookies.get("username")
+if username_cookie and username_cookie in accounts:
+    st.session_state.username = username_cookie
+    st.session_state.authenticated = True
+
+# ----------------------
+# LOGIN / REGISTER UI
+# ----------------------
+if not st.session_state.authenticated:
+    st.subheader("Login / Register")
+    login_tab, register_tab = st.tabs(["Login", "Register"])
+
+    # --- LOGIN ---
+    with login_tab:
+        login_user = st.text_input("Username", key="login_user")
+        login_pw = st.text_input("Password", type="password", key="login_pw")
+        if st.button("Login"):
+            if login_user in accounts:
+                stored_hash = accounts[login_user].encode()
+                if bcrypt.checkpw(login_pw.encode(), stored_hash):
+                    st.session_state.username = login_user
+                    st.session_state.authenticated = True
+                    st.success(f"Welcome back, {login_user}!")
+                    cookies["username"] = login_user
+                    cookies.save()
+                    st.experimental_rerun()
+                else:
+                    st.error("Incorrect password.")
+            else:
+                st.error("Username does not exist.")
+
+    # --- REGISTER ---
+    with register_tab:
+        reg_user = st.text_input("Choose Username", key="reg_user")
+        reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
+        if st.button("Register"):
+            if not reg_user or not reg_pw:
+                st.error("Cannot leave username/password empty.")
+            elif reg_user in accounts:
+                st.error("Username already exists.")
+            else:
+                # Hash password before saving
+                hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
+                accounts[reg_user] = hashed_pw
+
+                # Update session state and save immediately
+                st.session_state.user_accounts = accounts
+                save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
+
+                # Auto-login
+                st.session_state.username = reg_user
+                st.session_state.authenticated = True
+                cookies["username"] = reg_user
+                cookies.save()
+
+                st.success(f"Account created! You are now logged in as {reg_user}.")
+                st.experimental_rerun()
+
+# ----------------------
+# GITHUB LOAD / SAVE (BUILD CODES & USER ROLLS)
 # ----------------------
 def load_build_codes_github():
     if repo is None:
@@ -111,118 +211,6 @@ def save_user_rolls_github(rolls):
             repo.create_file(USER_ROLLS_FILE, "create user rolls", content)
     except Exception as e:
         st.warning(f"GitHub save failed: {e}")
-        
-# ----------------------
-# LOAD / SAVE FUNCTIONS
-# ----------------------
-def load_json_local(file_path, lock_file):
-    with FileLock(lock_file):
-        if os.path.exists(file_path):
-            with open(file_path, "r") as f:
-                return json.load(f)
-        return {}
-
-def save_json_local(file_path, lock_file, data):
-    with FileLock(lock_file):
-        with open(file_path, "w") as f:
-            json.dump(data, f, indent=4)
-
-# GitHub save/load (keep your current implementation)
-# ... [same as your existing functions for build codes & user rolls]
-
-# ----------------------
-# COOKIE SETUP
-# ----------------------
-cookies = EncryptedCookieManager(prefix="abi_random_", password="CHANGE_THIS_SECRET_KEY")
-if not cookies.ready():
-    st.stop()
-
-# ----------------------
-# SESSION STATE INIT
-# ----------------------
-st.session_state.setdefault("build_codes", load_json_local(BUILD_CODES_FILE, LOCK_FILE))
-st.session_state.setdefault("weapon_filters", {})
-st.session_state.setdefault("armor_filters", {})
-st.session_state.setdefault("helmet_filters", {})
-st.session_state.setdefault("authenticated", False)
-st.session_state.setdefault("admin_authenticated", False)
-st.session_state.setdefault("username", "")
-st.session_state.setdefault("user_rolls", load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
-st.session_state.setdefault("user_accounts", load_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE))
-
-# ----------------------
-# LOGIN / REGISTER UI
-# ----------------------
-if not st.session_state.authenticated:
-    st.subheader("Login / Register")
-    login_tab, register_tab = st.tabs(["Login", "Register"])
-    
-    # --- LOGIN ---
-    with login_tab:
-        login_user = st.text_input("Username", key="login_user")
-        login_pw = st.text_input("Password", type="password", key="login_pw")
-        if st.button("Login"):
-            if login_user in accounts:
-                stored_hash = accounts[login_user].encode()
-                if bcrypt.checkpw(login_pw.encode(), stored_hash):
-                    st.session_state.username = login_user
-                    st.session_state.authenticated = True
-                    st.success(f"Welcome back, {login_user}!")
-                    cookies["username"] = login_user
-                    cookies.save()
-                    st.experimental_rerun()
-                else:
-                    st.error("Incorrect password.")
-            else:
-                st.error("Username does not exist.")
-    
-    # --- REGISTER ---
-    with register_tab:
-        reg_user = st.text_input("Choose Username", key="reg_user")
-        reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
-        if st.button("Register"):
-            if not reg_user or not reg_pw:
-                st.error("Cannot leave username/password empty.")
-            elif reg_user in accounts:
-                st.error("Username already exists.")
-            else:
-                # Hash password before saving
-                hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
-                accounts[reg_user] = hashed_pw
-
-                # Update session state and save immediately
-                st.session_state.user_accounts = accounts
-                save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
-
-                # Auto-login
-                st.session_state.username = reg_user
-                st.session_state.authenticated = True
-                cookies["username"] = reg_user
-                cookies.save()
-
-                st.success(f"Account created! You are now logged in as {reg_user}.")
-                st.experimental_rerun()
-
-# ----------------------
-# KEEP ALL YOUR FILTERS / DATA
-# ----------------------
-# Initialize armor/helmet filters if empty
-for tier in st.session_state.armor_filters.keys():
-    st.session_state.armor_filters.setdefault(tier, True)
-for tier in st.session_state.helmet_filters.keys():
-    st.session_state.helmet_filters.setdefault(tier, True)
-
-# ----------------------
-# RANDOMIZER FUNCTION
-# ----------------------
-# Keep your full generate_loadout() function as-is
-# ----------------------
-# BUILD CODE MANAGEMENT FUNCTION
-# Keep add_build_code() function as-is
-# ----------------------
-# STREAMLIT UI TABS
-# Keep tabs for Randomizer, Build Codes, Admin Panel
-# Keep all your checkboxes, filters, and saving logic as-is
 
 # ----------------------
 # WEAPONS DATA
@@ -537,6 +525,7 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
 
 
