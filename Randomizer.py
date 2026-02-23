@@ -54,10 +54,20 @@ def save_build_codes_github(codes):
         return
     try:
         try:
+            # Always fetch the latest file to get current SHA
             file = repo.get_contents(BUILD_CODES_FILE)
-            repo.update_file(BUILD_CODES_FILE,"update",json.dumps(codes,indent=4),file.sha)
+            repo.update_file(
+                path=BUILD_CODES_FILE,
+                message="update build codes",
+                content=json.dumps(codes, indent=4),
+                sha=file.sha
+            )
         except UnknownObjectException:
-            repo.create_file(BUILD_CODES_FILE,"create",json.dumps(codes,indent=4))
+            repo.create_file(
+                path=BUILD_CODES_FILE,
+                message="create build codes",
+                content=json.dumps(codes, indent=4)
+            )
     except Exception as e:
         st.warning(f"GitHub save failed: {e}")
 
@@ -294,22 +304,20 @@ def add_code():
 
 st.button("Add Code", on_click=add_code, key="add_code_btn")
 
-# Display all weapons with their codes and remove buttons
+# Show all weapons with codes + remove button
 st.subheader("Existing Build Codes")
-
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
     st.markdown(f"**{weapon}**")
     for i, code in enumerate(codes):
-        cols = st.columns([4, 1])
+        cols = st.columns([4,1])
         cols[0].text(code)
         remove_key = f"remove_{weapon}_{i}"
         if cols[1].button("Remove", key=remove_key):
             st.session_state.build_codes[weapon].pop(i)
             save_build_codes_local(st.session_state.build_codes)
             save_build_codes_github(st.session_state.build_codes)
-            st.experimental_rerun()  # Refresh the UI
+            st.experimental_rerun()
 
 st.json(st.session_state.build_codes)
-
