@@ -15,8 +15,6 @@ BUILD_CODES_FILE = "build_codes.json"
 USER_ROLLS_FILE = "user_rolls.json"
 LOCK_FILE = BUILD_CODES_FILE + ".lock"
 USER_LOCK_FILE = USER_ROLLS_FILE + ".lock"
-BUILD_CODES_PASSWORD = st.secrets["build_codes_password"]
-ADMIN_PASSWORD = st.secrets["admin_password"]
 
 # ----------------------
 # GITHUB CONFIG
@@ -120,9 +118,12 @@ def save_user_rolls_github(rolls):
         st.warning(f"GitHub save failed: {e}")
 
 # ----------------------
-# COOKIE SETUP
+# COOKIE SETUP (secure)
 # ----------------------
-cookies = EncryptedCookieManager(prefix="abi_random_", password="CHANGE_THIS_SECRET_KEY")
+cookies = EncryptedCookieManager(
+    prefix="abi_random_",
+    password=st.secrets["cookie_secret"]
+)
 if not cookies.ready():
     st.stop()
 
@@ -139,7 +140,7 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("user_rolls", load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
 
 # ----------------------
-# USERNAME ENFORCEMENT WITH COOKIE & UNIQUE USER CHECK
+# USERNAME ENFORCEMENT
 # ----------------------
 existing_users = set(st.session_state.user_rolls.keys())
 saved_username = cookies.get("username", "")
@@ -148,21 +149,21 @@ if saved_username:
     st.session_state.username = saved_username
 elif not st.session_state.username:
     with st.form("username_form"):
-        username_input = st.text_input("Enter your username to continue (Press Submit Twice):")
+        username_input = st.text_input("Enter your username:")
         submitted = st.form_submit_button("Submit")
     
     if submitted:
         username_input = username_input.strip()
-        # Normalize for case-insensitive check
         if not username_input:
             st.error("Username cannot be empty.")
         elif username_input.lower() in map(str.lower, existing_users):
-            st.error("Username already taken. Please choose a different one.")
+            st.error("Username already taken.")
         else:
             st.session_state.username = username_input
             cookies["username"] = username_input
             cookies.save()
             st.success(f"Welcome, {username_input}!")
+            st.experimental_rerun()
     
     if not st.session_state.username:
         st.stop()
@@ -273,7 +274,7 @@ backpacks = [
 ]
 MAPS = ["Armory", "Farm", "Valley", "Airport", "Northridge", "TV Station"]
 
-# Initialize armor/helmet filters if empty
+# Initialize armor/helmet filters
 for tier in armors:
     st.session_state.armor_filters.setdefault(tier, True)
 for tier in helmets:
@@ -284,7 +285,6 @@ for tier in helmets:
 # ----------------------
 def generate_loadout():
     map_choice = random.choice(MAPS)
-
     weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
                if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
@@ -294,10 +294,8 @@ def generate_loadout():
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal, [cal]))}"
 
-    armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
-    helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
-    if not armor_tiers: armor_tiers = list(armors.keys())
-    if not helmet_tiers: helmet_tiers = list(helmets.keys())
+    armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active] or list(armors.keys())
+    helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active] or list(helmets.keys())
 
     armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})"
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
@@ -346,33 +344,6 @@ tabs = st.tabs(tabs_list)
 
 # ---------------------- RANDOMIZER TAB ----------------------
 with tabs[0]:
-    st.subheader("Weapon Categories")
-    col1w, col2w = st.columns(2)
-    def update_weapon_filter(cat):
-        st.session_state.weapon_filters[cat] = st.session_state[f"weapon_cb_{cat}"]
-    for i, cat in enumerate(sorted(WEAPONS_DATA.keys())):
-        key = f"weapon_cb_{cat}"
-        col = col1w if i % 2 == 0 else col2w
-        col.checkbox(cat, value=st.session_state.weapon_filters.get(cat, True), key=key, on_change=update_weapon_filter, args=(cat,))
-
-    st.subheader("Armor Tiers")
-    col1a, col2a = st.columns(2)
-    def update_armor_filter(tier):
-        st.session_state.armor_filters[tier] = st.session_state[f"armor_cb_{tier}"]
-    for i, tier in enumerate(sorted(armors.keys())):
-        key = f"armor_cb_{tier}"
-        col = col1a if i % 2 == 0 else col2a
-        col.checkbox(tier, value=st.session_state.armor_filters.get(tier, True), key=key, on_change=update_armor_filter, args=(tier,))
-
-    st.subheader("Helmet Tiers")
-    col1h, col2h = st.columns(2)
-    def update_helmet_filter(tier):
-        st.session_state.helmet_filters[tier] = st.session_state[f"helmet_cb_{tier}"]
-    for i, tier in enumerate(sorted(helmets.keys())):
-        key = f"helmet_cb_{tier}"
-        col = col1h if i % 2 == 0 else col2h
-        col.checkbox(tier, value=st.session_state.helmet_filters.get(tier, True), key=key, on_change=update_helmet_filter, args=(tier,))
-
     st.header("Generate Loadout")
     if st.button("Generate Loadout"):
         loadout = generate_loadout()
@@ -389,10 +360,10 @@ with tabs[1]:
     username = st.session_state.username
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
-            pw_input = st.text_input("Enter password to edit build codes (Press Submit Twice)", type="password")
+            pw_input = st.text_input("Enter password to edit build codes", type="password")
             pw_submit = st.form_submit_button("Submit")
         if pw_submit:
-            if pw_input == BUILD_CODES_PASSWORD:
+            if pw_input == st.secrets["build_codes_password"]:
                 st.session_state.authenticated = True
                 st.success("Password correct! You can now edit build codes.")
             else:
@@ -419,39 +390,79 @@ with tabs[1]:
 if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
     with tabs[2]:
         st.subheader("Admin Panel")
+        # Admin password
         if not st.session_state.admin_authenticated:
             with st.form("admin_password_form"):
                 admin_pw_input = st.text_input("Enter Admin Password", type="password")
                 admin_submit = st.form_submit_button("Submit Admin Password")
             if admin_submit:
-                if admin_pw_input == ADMIN_PASSWORD:
+                if admin_pw_input == st.secrets["admin_password"]:
                     st.session_state.admin_authenticated = True
                     st.success("Admin access granted!")
                 else:
                     st.error("Incorrect password")
-        if st.session_state.admin_authenticated:
+        if not st.session_state.admin_authenticated:
+            st.stop()
+
+        # Force Sync
+        if st.button("Force Sync Build Codes & User Rolls from GitHub"):
             st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
             st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
-            with st.expander("All Weapon Build Codes"):
-                for weapon, codes in sorted(st.session_state.build_codes.items()):
-                    st.markdown(f"**{weapon}**")
-                    if codes:
-                        for c in codes:
-                            if isinstance(c, dict):
-                                st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
-                            else:
-                                st.markdown(f"- {c}")
-                    else:
-                        st.markdown("- No codes yet")
-            with st.expander("User Roll History"):
-                search_query = st.text_input("Search Users")
-                for user, rolls in st.session_state.user_rolls.items():
-                    if search_query.lower() in user.lower():
-                        st.markdown(f"**{user}** ({len(rolls)} rolls)")
-                        for r in rolls[-5:]:
-                            st.markdown(f"- {r}")
+            st.success("Data synced successfully from GitHub!")
 
+        # User Management
+        st.markdown("### User Management")
+        search_query = st.text_input("Search Users")
+        users_data = [
+            {"username": u, 
+             "roll_count": len(r), 
+             "last_active": r[-1].split("\n")[0] if r else "N/A"}
+            for u, r in st.session_state.user_rolls.items()
+            if search_query.lower() in u.lower()
+        ]
+        for user in sorted(users_data, key=lambda x: x["roll_count"], reverse=True):
+            st.markdown(f"**{user['username']}** — Rolls: {user['roll_count']} — Last Active: {user['last_active']}")
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.button(f"Reset Rolls ({user['username']})"):
+                    st.session_state.user_rolls[user["username"]] = []
+                    save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+                    save_user_rolls_github(st.session_state.user_rolls)
+                    st.success(f"{user['username']}'s rolls reset.")
+            with col2:
+                if st.button(f"Ban User ({user['username']})"):
+                    st.session_state.user_rolls.pop(user["username"], None)
+                    save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+                    save_user_rolls_github(st.session_state.user_rolls)
+                    st.success(f"{user['username']} has been banned.")
 
+        # Build Codes
+        st.markdown("### Weapon Build Codes")
+        with st.expander("View All Weapon Build Codes"):
+            for weapon, codes in sorted(st.session_state.build_codes.items()):
+                st.markdown(f"**{weapon}**")
+                if codes:
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
+                else:
+                    st.markdown("- No codes yet")
 
+        # Random Loadout Testing
+        st.markdown("### Random Loadout Testing")
+        bulk_count = st.number_input("Number of loadouts to generate", min_value=1, max_value=100, value=5)
+        if st.button("Generate Loadouts"):
+            st.session_state.bulk_loadouts = [generate_loadout() for _ in range(bulk_count)]
+            for idx, loadout in enumerate(st.session_state.bulk_loadouts, 1):
+                st.markdown(f"**Loadout {idx}:**")
+                st.code(loadout)
+
+        # Session Management
+        st.markdown("### Active Sessions")
+        active_users = list(st.session_state.user_rolls.keys())
+        st.write(f"Currently active users: {len(active_users)}")
+        st.write(", ".join(active_users))
 
 
