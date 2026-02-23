@@ -1,6 +1,7 @@
 {
     "5ironman": [
         "Weapon: M1911\n  Ammo: HS\nArmor (Tier 6): BT101 Tactical Body Armor\nHelmet (Tier 1): Motorcycle Helmet\nBackpack: Retro Marching Backpack\nMap: Northridge",
-        "Weapon: Mosin-Nagant\n  Ammo: 7BT1\nArmor (Tier 5): Defender M4 Heavy Body Armor (Black)\nHelmet (Tier 1): Tanker Protective Cap\nBackpack: LUC Expanded Tactical Backpack\nMap: Valley"
+        "Weapon: Mosin-Nagant\n  Ammo: 7BT1\nArmor (Tier 5): Defender M4 Heavy Body Armor (Black)\nHelmet (Tier 1): Tanker Protective Cap\nBackpack: LUC Expanded Tactical Backpack\nMap: Valley",
+        "Weapon: AKM\n  Ammo: PS\nArmor (Tier 4): Spartan B Body Armor\nHelmet (Tier 6): HGB4 Offensive Helmet\nBackpack: Sling Bag\nMap: Farm"
     ]
 }
