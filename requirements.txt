@@ -1,1 +1,3 @@
+filelock
 PyGithub
+streamlit
