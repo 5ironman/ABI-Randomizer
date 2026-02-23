@@ -466,7 +466,7 @@ def build_codes_tab(tab):
     tab.subheader("Build Codes Management")
     username = st.session_state.username
 
-    # Password check without form
+    # Password check (inside the tab)
     if not st.session_state.build_codes_authenticated:
         pw_input = tab.text_input("Enter password to edit build codes", type="password")
         if tab.button("Submit Password"):
@@ -477,24 +477,28 @@ def build_codes_tab(tab):
                 tab.error("Incorrect password")
         return  # Exit until password correct
 
-    # Authenticated: show build codes
+    # Load codes
     st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+
+    # --- Weapon dropdown ---
     weapon_choice = tab.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
+
+    # --- Add new code ---
     new_code = tab.text_input("Enter new build code")
     if tab.button("Add Code"):
         add_build_code(weapon_choice, new_code, username)
 
-    with tab.expander("All Build Codes"):
-        for weapon, codes in sorted(st.session_state.build_codes.items()):
-            tab.markdown(f"**{weapon}**")
-            if codes:
-                for c in codes:
-                    if isinstance(c, dict):
-                        tab.markdown(f"- {c['code']} (added by {c['added_by']} at {c['timestamp']})")
-                    else:
-                        tab.markdown(f"- {c}")
+    # --- Show codes for selected weapon only ---
+    tab.subheader(f"Codes for {weapon_choice}")
+    codes = st.session_state.build_codes.get(weapon_choice, [])
+    if codes:
+        for c in codes:
+            if isinstance(c, dict):
+                tab.markdown(f"- **{c['code']}** (added by {c['added_by']} at {c['timestamp']})")
             else:
-                tab.markdown("- No codes yet")
+                tab.markdown(f"- **{c}**")
+    else:
+        tab.markdown("- No codes yet")
 
 # ----------------------
 # ADMIN PANEL TAB
@@ -561,6 +565,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
