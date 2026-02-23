@@ -357,29 +357,35 @@ def generate_loadout():
 
     loadout_lines = []
 
-    # Filter weapons by selected categories
-    selected_categories = [cat for cat, enabled in st.session_state.weapon_filters.items() if enabled]
-    for category in selected_categories:
-        weapons = WEAPONS_DATA.get(category, {})
-        if not weapons:
-            continue
-        weapon = random.choice(list(weapons.keys()))
-        ammo = weapons[weapon]
-        ammo_options = ammo_data.get(ammo, [ammo])
-        chosen_ammo = random.choice(ammo_options)
+    # Step 1: Collect all enabled weapons
+    all_enabled_weapons = []
+    for category, enabled in st.session_state.weapon_filters.items():
+        if enabled:
+            all_enabled_weapons.extend(list(WEAPONS_DATA.get(category, {}).keys()))
 
-        # Format: Weapon name on first line, ammo type below
+    if all_enabled_weapons:
+        # Step 2: Pick ONE random weapon
+        weapon = random.choice(all_enabled_weapons)
+        # Find ammo type
+        ammo_type = None
+        for cat, weapons in WEAPONS_DATA.items():
+            if weapon in weapons:
+                ammo_type = weapons[weapon]
+                break
+        # Step 3: Pick ammo
+        ammo_options = ammo_data.get(ammo_type, [ammo_type])
+        chosen_ammo = random.choice(ammo_options)
         loadout_lines.append(f"**{weapon}**\n  Ammo: {chosen_ammo}")
 
-    # Example: add armor and helmet randomly
+    # Armor
     armor_tiers = [tier for tier, enabled in st.session_state.armor_filters.items() if enabled]
-    helmet_tiers = [tier for tier, enabled in st.session_state.helmet_filters.items() if enabled]
-
     if armor_tiers:
         armor_tier = random.choice(armor_tiers)
         armor_item = random.choice(armors[armor_tier])
         loadout_lines.append(f"Armor ({armor_tier}): {armor_item}")
 
+    # Helmet
+    helmet_tiers = [tier for tier, enabled in st.session_state.helmet_filters.items() if enabled]
     if helmet_tiers:
         helmet_tier = random.choice(helmet_tiers)
         helmet_item = random.choice(helmets[helmet_tier])
@@ -393,7 +399,6 @@ def generate_loadout():
     map_choice = random.choice(MAPS)
     loadout_lines.append(f"Map: {map_choice}")
 
-    # Join all lines nicely
     return "\n".join(loadout_lines)
 
 # ----------------------
@@ -556,6 +561,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
