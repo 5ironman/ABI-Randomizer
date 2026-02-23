@@ -537,6 +537,7 @@ def admin_panel_tab(tab):
             st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
             st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
+    if st.session_state.admin_authenticated:
         st.subheader("All Build Codes")
         rows = []
         for weapon, codes in st.session_state.build_codes.items():
@@ -544,14 +545,12 @@ def admin_panel_tab(tab):
                 if isinstance(entry, dict):
                     rows.append({
                         "Weapon": weapon,
-                        "Code": entry.get("code"),
-                        "Added By": entry.get("added_by"),
-                        "Timestamp": entry.get("timestamp")
+                        "Code": entry.get("code")
                     })
         if rows:
-            st.dataframe(rows, use_container_width=True)
+            tab.dataframe(rows, use_container_width=True)
         else:
-            st.info("No build codes available.")
+            tab.info("No build codes available.")
 
     tab.subheader("User Roll History (Last 5 Rolls Per User)")
     
@@ -577,6 +576,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
