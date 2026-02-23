@@ -13,6 +13,7 @@
         "MAP: Airport\nCLASS: SMGs\nWEAPON: Vector .45\nAMMO: .45 ACP FMJ\nARMOR: IMTV Samurai Standard Armor (Tier 5)\nHELMET: Kelsey Fire Helmet (Tier 1)\nBACKPACK: Medium Camping Backpack",
         "MAP: Airport\nCLASS: SMGs\nWEAPON: UZI\nAMMO: 9x19mm AP6.3\nARMOR: Old Security Body Armor (Tier 2)\nHELMET: Motorcycle Helmet (Tier 1)\nBACKPACK: LUC Expanded Tactical Backpack",
         "MAP: TV Station\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP HS\nARMOR: KN Assault Body Armor (Tier 6)\nHELMET: Kelsey Fire Helmet (Tier 1)\nBACKPACK: LUC Expanded Tactical Backpack",
-        "MAP: Airport\nCLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm PT\nARMOR: BT101 Tactical Body Armor (Tier 6)\nHELMET: Tanker Protective Cap (Tier 1)\nBACKPACK: Outdoor Travel Backpack"
+        "MAP: Airport\nCLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm PT\nARMOR: BT101 Tactical Body Armor (Tier 6)\nHELMET: Tanker Protective Cap (Tier 1)\nBACKPACK: Outdoor Travel Backpack",
+        "MAP: Airport\nCLASS: SMGs\nWEAPON: T85\nAMMO: 7.62x25mm AKBS\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Kelsey Fire Helmet (Tier 1)\nBACKPACK: RUSH Tactical Backpack"
     ]
 }
