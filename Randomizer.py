@@ -468,6 +468,9 @@ def add_build_code(weapon, new_code, username):
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
+# ----------------------
+# BUILD CODES TAB
+# ----------------------
 def build_codes_tab(tab):
     tab.subheader("Build Codes Management")
     username = st.session_state.username
@@ -487,7 +490,11 @@ def build_codes_tab(tab):
     st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
 
     # --- Weapon dropdown ---
-    weapon_choice = tab.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
+    if st.session_state.build_codes:
+        weapon_choice = tab.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
+    else:
+        tab.info("No weapons available to add codes.")
+        return
 
     # --- Add new code ---
     new_code = tab.text_input("Enter new build code")
@@ -510,6 +517,12 @@ def build_codes_tab(tab):
             tab.markdown(f"**Selected Build Code:**\n```\n{selected_code}\n```")
     else:
         tab.info("No build codes available")
+
+    # --- Small footer info ---
+    tab.markdown(
+        "<sub>DM me to remove a build code. If you get a yellow error when adding a build, press the button again.</sub>",
+        unsafe_allow_html=True
+    )
 
 # ----------------------
 # ADMIN PANEL TAB
@@ -585,6 +598,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
