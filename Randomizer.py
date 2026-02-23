@@ -151,10 +151,8 @@ st.session_state.setdefault("user_rolls", load_json_local(USER_ROLLS_FILE, USER_
 st.session_state.setdefault("user_accounts", load_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE))
 
 # ----------------------
-# USER ACCOUNT LOGIN/REGISTER SYSTEM
+# LOGIN / REGISTER UI
 # ----------------------
-accounts = st.session_state.user_accounts
-
 if not st.session_state.authenticated:
     st.subheader("Login / Register")
     login_tab, register_tab = st.tabs(["Login", "Register"])
@@ -172,35 +170,38 @@ if not st.session_state.authenticated:
                     st.success(f"Welcome back, {login_user}!")
                     cookies["username"] = login_user
                     cookies.save()
+                    st.experimental_rerun()
                 else:
                     st.error("Incorrect password.")
             else:
                 st.error("Username does not exist.")
     
     # --- REGISTER ---
-with register_tab:
-    reg_user = st.text_input("Choose Username", key="reg_user")
-    reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
-    if st.button("Register"):
-        if not reg_user or not reg_pw:
-            st.error("Cannot leave username/password empty.")
-        elif reg_user in accounts:
-            st.error("Username already exists.")
-        else:
-            import bcrypt
-            # Hash password before saving
-            hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
-            accounts[reg_user] = hashed_pw
-            # Update session_state and save to file immediately
-            st.session_state.user_accounts = accounts
-            save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
-            st.success(f"Account created! You can now login as {reg_user}.")
-            # Optionally auto-login
-            st.session_state.username = reg_user
-            st.session_state.authenticated = True
-            cookies["username"] = reg_user
-            cookies.save()
-            st.experimental_rerun()  # reload page with logged-in state
+    with register_tab:
+        reg_user = st.text_input("Choose Username", key="reg_user")
+        reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
+        if st.button("Register"):
+            if not reg_user or not reg_pw:
+                st.error("Cannot leave username/password empty.")
+            elif reg_user in accounts:
+                st.error("Username already exists.")
+            else:
+                # Hash password before saving
+                hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
+                accounts[reg_user] = hashed_pw
+
+                # Update session state and save immediately
+                st.session_state.user_accounts = accounts
+                save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
+
+                # Auto-login
+                st.session_state.username = reg_user
+                st.session_state.authenticated = True
+                cookies["username"] = reg_user
+                cookies.save()
+
+                st.success(f"Account created! You are now logged in as {reg_user}.")
+                st.experimental_rerun()
 
 # ----------------------
 # KEEP ALL YOUR FILTERS / DATA
@@ -536,6 +537,7 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
 
 
