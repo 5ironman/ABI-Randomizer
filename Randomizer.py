@@ -431,12 +431,19 @@ def randomizer_tab(tab):
                      on_change=lambda t=tier: st.session_state.helmet_filters.update({t: st.session_state[f"helmet_cb_{t}"]}))
     # Generate Loadout
     tab.header("Generate Loadout")
-    if tab.button("Generate Loadout"):
+    # After generating a loadout
+    if st.button("Generate Loadout"):
         loadout = generate_loadout()
-        tab.code(loadout)
+        st.code(loadout)
+    
+        # Save user roll
         user = st.session_state.username
         st.session_state.user_rolls.setdefault(user, []).append(loadout)
-        st.session_state.user_rolls[user] = st.session_state.user_rolls[user][-50:]
+    
+        # Keep only last 10 rolls
+        st.session_state.user_rolls[user] = st.session_state.user_rolls[user][-10:]
+    
+        # Save locally and to GitHub
         save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
         save_user_rolls_github(st.session_state.user_rolls)
 
@@ -542,15 +549,14 @@ def admin_panel_tab(tab):
         else:
             st.info("No build codes available.")
 
-        st.divider()
-        st.subheader("User Roll History")
-        if st.session_state.user_rolls:
-            for user, rolls in st.session_state.user_rolls.items():
-                with st.expander(f"{user} — {len(rolls)} rolls", expanded=False):
-                    for i, roll in enumerate(reversed(rolls[-50:]), 1):
-                        st.text(f"{i}. {roll}")
-        else:
-            st.info("No users found.")
+    tab.subheader("User Roll History (Last 10 Rolls Per User)")
+    if st.session_state.user_rolls:
+        for user, rolls in st.session_state.user_rolls.items():
+            with tab.expander(f"{user} — {len(rolls)} rolls", expanded=False):
+                for i, roll in enumerate(reversed(rolls[-10:]), 1):  # Only last 10
+                    tab.text(f"{i}. {roll}")
+    else:
+        tab.info("No users found.")
 
 # ----------------------
 # MAIN APP TABS
@@ -565,6 +571,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
