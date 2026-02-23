@@ -131,12 +131,24 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("user_rolls", load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
 
 # ----------------------
-# GLOBAL USERNAME ENFORCEMENT
+# GLOBAL USERNAME ENFORCEMENT (FIXED)
 # ----------------------
 if not st.session_state.username.strip():
     st.warning("You must enter a username to access any part of the site.")
-    st.session_state.username = st.text_input("Enter your username to continue:")
-    st.stop()
+
+    with st.form("username_form"):
+        username_input = st.text_input("Enter your username to continue:")
+        submitted = st.form_submit_button("Submit")
+
+    if submitted:
+        username_input = username_input.strip()
+        if username_input:
+            st.session_state.username = username_input
+            st.success(f"Welcome, {username_input}!")
+            st.experimental_rerun()  # rerun so the rest of the app sees the username
+        else:
+            st.error("Username cannot be empty.")
+    st.stop()  # stop execution until username is provided
 
 # ----------------------
 # DATA
@@ -318,3 +330,4 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
+
