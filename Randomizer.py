@@ -88,7 +88,7 @@ if username_cookie and username_cookie in accounts:
     st.session_state.authenticated = True
 
 # ----------------------
-# LOGIN / REGISTER UI
+# REQUIRE LOGIN BEFORE SHOWING ANY CONTENT
 # ----------------------
 if not st.session_state.authenticated:
     st.subheader("Login / Register")
@@ -104,9 +104,9 @@ if not st.session_state.authenticated:
                 if bcrypt.checkpw(login_pw.encode(), stored_hash):
                     st.session_state.username = login_user
                     st.session_state.authenticated = True
-                    st.success(f"Welcome back, {login_user}!")
                     cookies["username"] = login_user
                     cookies.save()
+                    st.success(f"Welcome back, {login_user}!")
                     st.experimental_rerun()
                 else:
                     st.error("Incorrect password.")
@@ -123,11 +123,11 @@ if not st.session_state.authenticated:
             elif reg_user in accounts:
                 st.error("Username already exists.")
             else:
-                # Hash password before saving
+                # Hash password
                 hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
                 accounts[reg_user] = hashed_pw
 
-                # Update session state and save immediately
+                # Save accounts
                 st.session_state.user_accounts = accounts
                 save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
 
@@ -139,6 +139,18 @@ if not st.session_state.authenticated:
 
                 st.success(f"Account created! You are now logged in as {reg_user}.")
                 st.experimental_rerun()
+
+# ----------------------
+# SHOW EVERYTHING ELSE ONLY AFTER LOGIN
+# ----------------------
+if st.session_state.authenticated:
+    st.sidebar.write(f"Logged in as: {st.session_state.username}")
+    
+    # --- Place the rest of your app here ---
+    # Randomizer tab, Build Codes tab, Admin Panel tab, filters, etc.
+    # Example:
+    st.header("Welcome to the Randomizer App!")
+    # Your existing tabs and filters code goes here
 
 # ----------------------
 # GITHUB LOAD / SAVE (BUILD CODES & USER ROLLS)
@@ -525,6 +537,7 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
 
 
