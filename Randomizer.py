@@ -70,9 +70,9 @@ def save_build_codes_github(codes):
             latest_codes = {}
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
-            for code in code_list:
-                if code not in latest_codes[weapon]:
-                    latest_codes[weapon].append(code)
+            for entry in code_list:
+                if not any(e["code"] == entry["code"] for e in latest_codes[weapon]):
+                    latest_codes[weapon].append(entry)
         content = json.dumps(latest_codes, indent=4)
         if file:
             repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
@@ -257,57 +257,70 @@ def generate_loadout():
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
     backpack = random.choice(backpacks)
     codes = st.session_state.build_codes.get(weapon, [])
-    code = random.choice(codes) if codes else None
+    code_entry = random.choice(codes) if codes else None
     lines = [f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
-    if code:
-        lines.append(f"BUILD CODE: {code}")
+    if code_entry:
+        lines.append(f"BUILD CODE: {code_entry['code']} (added by {code_entry['added_by']})")
     lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
     return "\n".join(lines)
 
 # ----------------------
-# BUILD CODE MANAGEMENT
+# ADD BUILD CODE
 # ----------------------
 def add_build_code(weapon, new_code):
     new_code = new_code.strip()
     if not new_code:
         return
+    user = st.session_state.username or "Unknown"
     latest_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
     latest_codes.setdefault(weapon, [])
     st.session_state.build_codes.setdefault(weapon, [])
-    if new_code not in latest_codes[weapon]:
-        latest_codes[weapon].append(new_code)
-        st.session_state.build_codes[weapon] = latest_codes[weapon]
-        save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
-        save_build_codes_github(latest_codes)
-        st.success(f"Added '{new_code}' to {weapon}")
-        st.experimental_rerun()  # Refresh to show new code
+
+    if any(entry["code"] == new_code for entry in latest_codes[weapon]):
+        st.warning(f"Code '{new_code}' already exists for {weapon}")
+        return
+
+    entry = {"code": new_code, "added_by": user}
+    latest_codes[weapon].append(entry)
+    st.session_state.build_codes[weapon] = latest_codes[weapon]
+
+    save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
+    save_build_codes_github(latest_codes)
+    st.success(f"Added '{new_code}' to {weapon} (by {user})")
+    return st.session_state.build_codes[weapon]
 
 # ----------------------
 # STREAMLIT UI
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-tabs = ["Randomizer", "Build Codes", "Admin Panel"]
+# --- Cookie-like username ---
+if not st.session_state.username:
+    if "username" in st.experimental_get_query_params():
+        st.session_state.username = st.experimental_get_query_params()["username"][0]
+
+st.session_state.username = st.text_input("Username", value=st.session_state.username)
+if st.session_state.username.strip():
+    st.experimental_set_query_params(username=st.session_state.username)
+
+# --- Tabs ---
+tabs = ["Randomizer","Build Codes","Admin Panel"]
 tab_selected = st.radio("Select tab", tabs, index=tabs.index(st.session_state.active_tab))
 st.session_state.active_tab = tab_selected
 
-tab1_active = tab_selected == "Randomizer"
-tab2_active = tab_selected == "Build Codes"
-tab3_active = tab_selected == "Admin Panel"
-
-# ---------------------- RANDOMIZER TAB ----------------------
-if tab1_active:
-    st.subheader("Enter Username")
-    st.session_state.username = st.text_input("Username", value=st.session_state.username, key="username_input")
+# ---------------------- RANDOMIZER ----------------------
+if tab_selected=="Randomizer":
     if not st.session_state.username.strip():
         st.warning("Please enter a username to use the randomizer.")
     else:
         st.subheader("Weapon Categories")
         for cat in WEAPONS_DATA:
             st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+
         st.subheader("Armor Tiers")
         for tier in armors:
             st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+
         st.subheader("Helmet Tiers")
         for tier in helmets:
             st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
@@ -321,14 +334,14 @@ if tab1_active:
             save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
             save_user_rolls_github(st.session_state.user_rolls)
 
-# ---------------------- BUILD CODES TAB ----------------------
-if tab2_active:
+# ---------------------- BUILD CODES ----------------------
+if tab_selected=="Build Codes":
     st.header("Build Codes Management")
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
-        if st.button("Submit Password", key="buildcodes_pw_btn"):
-            if pw == BUILD_CODES_PASSWORD:
-                st.session_state.authenticated = True
+        if st.button("Submit Password"):
+            if pw==BUILD_CODES_PASSWORD:
+                st.session_state.authenticated=True
                 st.success("Password correct!")
             else:
                 st.error("Incorrect password")
@@ -336,35 +349,40 @@ if tab2_active:
         weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
         new_code = st.text_input("Enter new build code")
         if st.button("Add Code"):
-            add_build_code(weapon_choice, new_code)
+            updated_codes = add_build_code(weapon_choice, new_code)
+            if updated_codes:
+                st.markdown(f"**{weapon_choice}**")
+                for entry in updated_codes:
+                    st.markdown(f"- {entry['code']} _(added by {entry['added_by']})_")
+
         st.markdown("---")
         st.subheader("All Build Codes")
         for weapon, codes in sorted(st.session_state.build_codes.items()):
             st.markdown(f"**{weapon}**")
             if codes:
-                for code in codes:
-                    st.markdown(f"- {code}")
+                for entry in codes:
+                    st.markdown(f"- {entry['code']} _(added by {entry['added_by']})_")
             else:
                 st.markdown("- No codes yet")
 
-# ---------------------- ADMIN PANEL TAB ----------------------
-if tab3_active:
+# ---------------------- ADMIN PANEL ----------------------
+if tab_selected=="Admin Panel":
     st.header("Admin Panel")
     if not st.session_state.admin_authenticated:
-        admin_pw = st.text_input("Enter Admin Password", type="password", key="admin_pw_input")
-        if admin_pw == ADMIN_PASSWORD:
-            st.session_state.admin_authenticated = True
+        admin_pw = st.text_input("Enter Admin Password", type="password")
+        if admin_pw==ADMIN_PASSWORD:
+            st.session_state.admin_authenticated=True
             st.success("Admin access granted!")
-        elif admin_pw != "":
+        elif admin_pw!="":
             st.error("Incorrect password")
 
     if st.session_state.admin_authenticated:
-        st.subheader("All Weapon Build Codes (Vertical View)")
+        st.subheader("All Weapon Build Codes")
         for weapon, codes in sorted(st.session_state.build_codes.items()):
             st.markdown(f"**{weapon}**")
             if codes:
-                for code in codes:
-                    st.markdown(f"- {code}")
+                for entry in codes:
+                    st.markdown(f"- {entry['code']} _(added by {entry['added_by']})_")
             else:
                 st.markdown("- No codes yet")
 
@@ -391,10 +409,10 @@ if tab3_active:
                 for line in roll.split("\n"):
                     if line.startswith("WEAPON: "):
                         w = line.replace("WEAPON: ","")
-                        weapon_count[w] = weapon_count.get(w, 0) + 1
+                        weapon_count[w] = weapon_count.get(w,0)+1
         top_weapons = sorted(weapon_count.items(), key=lambda x: x[1], reverse=True)[:5]
         st.markdown("- Top 5 rolled weapons:")
-        for w, c in top_weapons:
+        for w,c in top_weapons:
             st.markdown(f"  - {w}: {c} times")
 
 
