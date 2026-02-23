@@ -4,6 +4,7 @@
     ],
     "5ironman": [
         "CLASS: Marksman Rifles\nWEAPON: SVDS\nAMMO: 7.62x54mm 7N37\nARMOR: Spartan B Body Armor (Tier 4)\nHELMET: 6BNT Helmet (Tier 3)\nBACKPACK: AMP7 Assault Backpack",
-        "CLASS: Marksman Rifles\nWEAPON: MK14\nAMMO: 7.62x51mm UN\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Motorcycle Helmet (Tier 1)\nBACKPACK: Retro Marching Backpack"
+        "CLASS: Marksman Rifles\nWEAPON: MK14\nAMMO: 7.62x51mm UN\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Motorcycle Helmet (Tier 1)\nBACKPACK: Retro Marching Backpack",
+        "CLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm DumDum\nARMOR: Old Security Body Armor (Tier 1)\nHELMET: RST Special Forces Helmet (Tier 1)\nBACKPACK: RUSH Tactical Backpack"
     ]
 }
