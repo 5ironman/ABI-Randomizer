@@ -3,6 +3,7 @@
         "CLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm LRN\nARMOR: Retro Infantry Bulletproof Vest (Tier 3)\nHELMET: SH18 Military Helmet (Tier 1)\nBACKPACK: Retro Marching Backpack",
         "CLASS: Assault Rifles\nWEAPON: AN-94\nAMMO: 5.45x39mm PP\nARMOR: Retro Bulletproof Vest (Tier 4)\nHELMET: 56K Helicopter Helmet (Tier 3)\nBACKPACK: Retro Marching Backpack",
         "CLASS: Shotguns\nWEAPON: TOZ-34\nAMMO: 12x70mm RIP Slug\nARMOR: H-LC Tactical Body Armor\nHELMET: 6B4 Helmet (Squad S)\nBACKPACK: Medium Camping Backpack",
-        "CLASS: Assault Rifles\nWEAPON: ZC-807\nAMMO: 7.62x39mm HP\nARMOR: H-Tac SWAT Body Armor\nHELMET: Motorcycle Helmet\nBACKPACK: 926 Field Backpack"
+        "CLASS: Assault Rifles\nWEAPON: ZC-807\nAMMO: 7.62x39mm HP\nARMOR: H-Tac SWAT Body Armor\nHELMET: Motorcycle Helmet\nBACKPACK: 926 Field Backpack",
+        "CLASS: SMGs\nWEAPON: MP40\nAMMO: 9x19mm PST\nARMOR: Security Body Armor\nHELMET: 56K Helicopter Helmet\nBACKPACK: Med Field Backpack"
     ]
 }
