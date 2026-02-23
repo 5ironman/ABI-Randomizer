@@ -58,8 +58,8 @@ def save_build_codes_github(codes):
             repo.update_file(BUILD_CODES_FILE,"update",json.dumps(codes,indent=4),file.sha)
         except UnknownObjectException:
             repo.create_file(BUILD_CODES_FILE,"create",json.dumps(codes,indent=4))
-    except:
-        pass
+    except Exception as e:
+        st.warning(f"GitHub save failed: {e}")
 
 # ----------------------
 # SESSION STATE
@@ -69,7 +69,7 @@ if "build_codes" not in st.session_state:
     st.session_state.build_codes = codes
 
 # ----------------------
-# WEAPONS DATA (UNCHANGED)
+# WEAPONS DATA
 # ----------------------
 WEAPONS_DATA = {
     "Assault Rifles": {
@@ -114,7 +114,7 @@ WEAPONS_DATA = {
 }
 
 # ----------------------
-# OTHER DATA (UNCHANGED)
+# OTHER DATA
 # ----------------------
 ammo_data = {
     "5.45x39mm": ["HP", "PS", "BP", "BS", "PP", "PRS"],
@@ -171,7 +171,6 @@ Backpacks = [
     "926 Field Backpack","Field Camping Backpack","RAL Heavy Military Backpack"
 ]
 
-
 # ----------------------
 # ENSURE BUILD CODES
 # ----------------------
@@ -192,62 +191,15 @@ if "helmet_filters" not in st.session_state:
     st.session_state.helmet_filters = {tier: True for tier in helmets}
 
 # ----------------------
-# UI
+# RANDOMIZER FUNCTION
 # ----------------------
-st.title("ABI Randomizer & Build Codes")
-
-# Weapon Categories Buttons
-st.subheader("Weapon Categories")
-cols = st.columns(len(WEAPONS_DATA))
-for i, cat in enumerate(WEAPONS_DATA):
-    if cols[i].button(
-        f"{'🟢' if st.session_state.weapon_filters[cat] else '🔴'} {cat}",
-        key=f"weapon_{cat}"
-    ):
-        st.session_state.weapon_filters[cat] = not st.session_state.weapon_filters[cat]
-
-# Armor Tiers Buttons
-st.subheader("Armor Tiers")
-cols = st.columns(len(armors))
-for i, tier in enumerate(armors):
-    if cols[i].button(
-        f"{'🟢' if st.session_state.armor_filters[tier] else '🔴'} {tier}",
-        key=f"armor_{tier}"
-    ):
-        st.session_state.armor_filters[tier] = not st.session_state.armor_filters[tier]
-
-# Helmet Tiers Buttons
-st.subheader("Helmet Tiers")
-cols = st.columns(len(helmets))
-for i, tier in enumerate(helmets):
-    if cols[i].button(
-        f"{'🟢' if st.session_state.helmet_filters[tier] else '🔴'} {tier}",
-        key=f"helmet_{tier}"
-    ):
-        st.session_state.helmet_filters[tier] = not st.session_state.helmet_filters[tier]
-
-# ----------------------
-# GENERATOR UI
-# ----------------------
-st.header("Generate Loadout")
-
-if st.button("Generate Loadout"):
-    st.code(generate_loadout(lockdown=False, disable=False, exclude=False))
-# ----------------------
-# RANDOMIZER
-# ----------------------
-def generate_loadout(lockdown, disable, exclude):
+def generate_loadout(lockdown=False, disable=False, exclude=False):
 
     weapons = []
 
     for cat, items in WEAPONS_DATA.items():
-
         if not st.session_state.weapon_filters[cat]:
             continue
-
-        if disable and cat in ("Shotguns","Pistols","Carbines"):
-            continue
-
         for w, cal in items.items():
             weapons.append((cat,w,cal))
 
@@ -255,19 +207,13 @@ def generate_loadout(lockdown, disable, exclude):
         return "No weapons available."
 
     category, weapon, caliber = random.choice(weapons)
-
     ammo = f"{caliber} {random.choice(ammo_data.get(caliber,[caliber]))}"
 
     armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
     helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
 
-    if lockdown:
-        armor_tiers = [t for t in armor_tiers if t != "Tier 6"]
-        helmet_tiers = [t for t in helmet_tiers if t != "Tier 6"]
-
-    if exclude:
-        armor_tiers = [t for t in armor_tiers if t not in ("Tier 1","Tier 2")]
-        helmet_tiers = [t for t in helmet_tiers if t not in ("Tier 1","Tier 2")]
+    if not armor_tiers or not helmet_tiers:
+        return "No armor/helmet tiers available with current filters."
 
     armor_tier = random.choice(armor_tiers)
     helmet_tier = random.choice(helmet_tiers)
@@ -298,43 +244,62 @@ def generate_loadout(lockdown, disable, exclude):
     return "\n".join(lines)
 
 # ----------------------
-# GENERATOR UI
+# STREAMLIT UI
 # ----------------------
+st.title("ABI Randomizer & Build Codes")
+
+# Weapon Categories Buttons
+st.subheader("Weapon Categories")
+cols = st.columns(len(WEAPONS_DATA))
+for i, cat in enumerate(WEAPONS_DATA):
+    if cols[i].button(
+        f"{'🟢' if st.session_state.weapon_filters[cat] else '🔴'} {cat}",
+        key=f"weapon_btn_{i}_{cat}"
+    ):
+        st.session_state.weapon_filters[cat] = not st.session_state.weapon_filters[cat]
+
+# Armor Tiers Buttons
+st.subheader("Armor Tiers")
+cols = st.columns(len(armors))
+for i, tier in enumerate(armors):
+    if cols[i].button(
+        f"{'🟢' if st.session_state.armor_filters[tier] else '🔴'} {tier}",
+        key=f"armor_btn_{i}_{tier}"
+    ):
+        st.session_state.armor_filters[tier] = not st.session_state.armor_filters[tier]
+
+# Helmet Tiers Buttons
+st.subheader("Helmet Tiers")
+cols = st.columns(len(helmets))
+for i, tier in enumerate(helmets):
+    if cols[i].button(
+        f"{'🟢' if st.session_state.helmet_filters[tier] else '🔴'} {tier}",
+        key=f"helmet_btn_{i}_{tier}"
+    ):
+        st.session_state.helmet_filters[tier] = not st.session_state.helmet_filters[tier]
+
+# Generate Loadout Button
 st.header("Generate Loadout")
-
-c1,c2,c3 = st.columns(3)
-
-with c1:
-    lockdown = st.checkbox("Lockdown (No Tier 6)")
-
-with c2:
-    disable = st.checkbox("Disable Shotguns/Pistols/Carbines")
-
-with c3:
-    exclude = st.checkbox("Exclude Tier 1 & 2")
-
-if st.button("Generate Loadout"):
-    st.code(generate_loadout(lockdown,disable,exclude))
+if st.button("Generate Loadout", key="generate_loadout_btn"):
+    st.code(generate_loadout())
 
 # ----------------------
 # BUILD CODE EDITOR
 # ----------------------
 st.header("Build Codes")
 
-weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()))
+weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()), key="weapon_choice")
+new_code = st.text_input("New Build Code", key="new_code")
 
-new_code = st.text_input("New Build Code")
-
-if st.button("Add Code"):
-
-    if new_code and new_code not in st.session_state.build_codes[weapon_choice]:
-
-        st.session_state.build_codes[weapon_choice].append(new_code)
-
+def add_code():
+    code = st.session_state.new_code
+    weapon = st.session_state.weapon_choice
+    if code and code not in st.session_state.build_codes[weapon]:
+        st.session_state.build_codes[weapon].append(code)
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
-
+        st.session_state.new_code = ""
         st.success("Build code added")
 
+st.button("Add Code", on_click=add_code, key="add_code_btn")
 st.json(st.session_state.build_codes)
-
