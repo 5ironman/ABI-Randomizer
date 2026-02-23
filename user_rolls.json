@@ -8,6 +8,7 @@
         "**MCX**\n  Ammo: M855A1\n**UZI**\n  Ammo: PST\n**SVTU**\n  Ammo: LPS\n**M110**\n  Ammo: M62\n**Mosin-Nagant**\n  Ammo: T46M\n**SPR310**\n  Ammo: RIP Slug\n**G17**\n  Ammo: 7N31\nArmor (Tier 1): Retro Sapper Bulletproof Vest\nHelmet (Tier 2): Security Helmet\nBackpack: Sling Bag\nMap: Airport"
     ],
     "5ironmanTest": [
-        "MAP: Farm\nCLASS: SMGs\nWEAPON: P90\nAMMO: 5.7x28mm L191\nARMOR: Retro Bulletproof Vest (Tier 2)\nHELMET: RSP Heavy Tactical Helmet (Tier 2)\nBACKPACK: Retro Marching Backpack"
+        "MAP: Farm\nCLASS: SMGs\nWEAPON: P90\nAMMO: 5.7x28mm L191\nARMOR: Retro Bulletproof Vest (Tier 2)\nHELMET: RSP Heavy Tactical Helmet (Tier 2)\nBACKPACK: Retro Marching Backpack",
+        "**AK-74N**\n  Ammo: PP\n**MAC-10**\n  Ammo: FMJ\n**M16**\n  Ammo: M855\n**U191**\n  Ammo: DBP87\n**M24**\n  Ammo: BPZ\n**M870**\n  Ammo: RIP Slug\n**M9A3**\n  Ammo: 7N31\nArmor (Tier 3): H-LC Lightweight Body Armor\nHelmet (Tier 2): Security Riot Helmet\nBackpack: Medium Camping Backpack\nMap: Valley"
     ]
 }
