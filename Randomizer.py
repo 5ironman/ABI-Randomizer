@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # CONFIG
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
-REFRESH_INTERVAL_MS = 5000  # Auto-refresh interval
+REFRESH_INTERVAL_MS = 5000
 
 # ----------------------
 # AUTO REFRESH
@@ -98,6 +98,9 @@ def save_build_codes_github(codes):
 # ----------------------
 if "build_codes" not in st.session_state:
     st.session_state.build_codes = load_build_codes_github() if repo else load_build_codes_local()
+
+if "needs_rerun" not in st.session_state:
+    st.session_state.needs_rerun = False
 
 # ----------------------
 # WEAPONS DATA
@@ -314,7 +317,6 @@ st.button("Add Code", on_click=add_code)
 # REMOVE BUILD CODES LIVE
 # ----------------------
 st.subheader("Existing Build Codes (uncheck to remove)")
-needs_rerun = False  # Track if we need to rerun after processing all checkboxes
 
 for weapon, codes in sorted(st.session_state.build_codes.items()):
     if not codes:
@@ -323,13 +325,11 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
     remove_list = []
 
     for code in codes:
-        # Dynamic checkboxes: always checked by default
         checked = st.checkbox(code, value=True, key=f"{weapon}_code_{code}")
         if not checked:
             remove_list.append(code)
 
     if remove_list:
-        # Load latest codes to merge safely
         latest_codes = load_build_codes_github() if repo else load_build_codes_local()
         for code in remove_list:
             if code in latest_codes.get(weapon, []):
@@ -338,11 +338,16 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.session_state.build_codes[weapon].remove(code)
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
-        needs_rerun = True  # Mark for rerun after iteration
+        st.session_state.needs_rerun = True
 
-# Rerun once after all checkboxes processed
-if needs_rerun:
+# Trigger rerun **after all checkboxes processed**
+if st.session_state.needs_rerun:
+    st.session_state.needs_rerun = False
     st.experimental_rerun()
+
+
+
+
 
 
 
