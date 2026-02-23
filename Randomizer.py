@@ -269,7 +269,6 @@ st.session_state.helmet_filters = {tier: True for tier in helmets}
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    # Weapons
     weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
                if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
@@ -278,7 +277,6 @@ def generate_loadout():
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
 
-    # Armor & Helmet selection based on active tiers
     armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
     helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
 
@@ -289,10 +287,8 @@ def generate_loadout():
 
     armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})"
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
-
     backpack = random.choice(backpacks)
 
-    # Build code
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
 
@@ -300,7 +296,6 @@ def generate_loadout():
     if code:
         lines.append(f"BUILD CODE: {code}")
     lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
-
     return "\n".join(lines)
 
 # ----------------------
@@ -311,7 +306,7 @@ def add_build_code(weapon, new_code, username):
     if not new_code or not username.strip():
         st.error("Username and code cannot be empty.")
         return
-    
+
     latest_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
     latest_codes.setdefault(weapon, [])
     st.session_state.build_codes.setdefault(weapon, [])
@@ -336,21 +331,15 @@ tab1, tab2, tab3 = st.tabs(["Randomizer", "Build Codes", "Admin Panel"])
 with tab1:
     st.subheader("Weapon Categories")
     for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(
-            cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}"
-        )
+        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
 
     st.subheader("Armor Tiers")
     for tier in sorted(armors.keys()):
-        st.session_state.armor_filters[tier] = st.checkbox(
-            tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}"
-        )
+        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
 
     st.subheader("Helmet Tiers")
     for tier in sorted(helmets.keys()):
-        st.session_state.helmet_filters[tier] = st.checkbox(
-            tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}"
-        )
+        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
 
     st.header("Generate Loadout")
     if st.button("Generate Loadout"):
@@ -366,7 +355,7 @@ with tab1:
 with tab2:
     st.subheader("Build Codes Management")
     username = st.session_state.username
-    
+
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
             pw_input = st.text_input("Enter password to edit build codes", type="password")
@@ -379,30 +368,29 @@ with tab2:
             else:
                 st.error("Incorrect password")
 
-        if not st.session_state.authenticated:
-            st.stop()
+    if st.session_state.authenticated:
+        st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+        weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
+        new_code = st.text_input("Enter new build code")
+        if st.button("Add Code"):
+            add_build_code(weapon_choice, new_code, username)
 
-    # Authenticated UI
-    st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
-    weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
-    new_code = st.text_input("Enter new build code")
-    if st.button("Add Code"):
-        add_build_code(weapon_choice, new_code, username)
-
-    with st.expander("All Build Codes"):
-        for weapon, codes in sorted(st.session_state.build_codes.items()):
-            st.markdown(f"**{weapon}**")
-            if codes:
-                for c in codes:
-                    if isinstance(c, dict):
-                        st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
-                    else:
-                        st.markdown(f"- {c}")
-            else:
-                st.markdown("- No codes yet")
+        with st.expander("All Build Codes"):
+            for weapon, codes in sorted(st.session_state.build_codes.items()):
+                st.markdown(f"**{weapon}**")
+                if codes:
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
+                else:
+                    st.markdown("- No codes yet")
 
 # ---------------------- ADMIN PANEL TAB ----------------------
 with tab3:
+    st.subheader("Admin Panel")
+
     if not st.session_state.admin_authenticated:
         with st.form("admin_password_form"):
             admin_pw_input = st.text_input("Enter Admin Password", type="password")
@@ -415,31 +403,29 @@ with tab3:
             else:
                 st.error("Incorrect password")
 
-        if not st.session_state.admin_authenticated:
-            st.stop()
+    if st.session_state.admin_authenticated:
+        st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+        st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
-    # Authenticated admin UI
-    st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
-    st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+        with st.expander("All Weapon Build Codes"):
+            for weapon, codes in sorted(st.session_state.build_codes.items()):
+                st.markdown(f"**{weapon}**")
+                if codes:
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
+                else:
+                    st.markdown("- No codes yet")
 
-    # Show build codes
-    with st.expander("All Weapon Build Codes"):
-        for weapon, codes in sorted(st.session_state.build_codes.items()):
-            st.markdown(f"**{weapon}**")
-            if codes:
-                for c in codes:
-                    if isinstance(c, dict):
-                        st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
-                    else:
-                        st.markdown(f"- {c}")
-            else:
-                st.markdown("- No codes yet")
+        with st.expander("User Roll History"):
+            search_query = st.text_input("Search Users")
+            for user, rolls in st.session_state.user_rolls.items():
+                if search_query.lower() in user.lower():
+                    st.markdown(f"**{user}** ({len(rolls)} rolls)")
+                    for r in rolls[-5:]:
+                        st.markdown(f"- {r}")
 
-    # Show user roll history
-    with st.expander("User Roll History"):
-        search_query = st.text_input("Search Users")
-        for user, rolls in st.session_state.user_rolls.items():
-            if search_query.lower() in user.lower():
-                st.markdown(f"**{user}** ({len(rolls)} rolls)")
-                for r in rolls[-5:]:
-                    st.markdown(f"- {r}")
+
+
