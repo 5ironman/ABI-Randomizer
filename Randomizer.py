@@ -40,6 +40,78 @@ def get_github_repo():
 repo = get_github_repo()
 
 # ----------------------
+# GITHUB LOAD / SAVE
+# ----------------------
+def load_build_codes_github():
+    if repo is None:
+        return {}
+    try:
+        file_content = repo.get_contents(BUILD_CODES_FILE)
+        return json.loads(file_content.decoded_content.decode())
+    except Exception:
+        return {}
+
+def save_build_codes_github(codes):
+    if repo is None:
+        return
+    try:
+        try:
+            file = repo.get_contents(BUILD_CODES_FILE)
+            latest_codes = json.loads(file.decoded_content.decode())
+        except UnknownObjectException:
+            file = None
+            latest_codes = {}
+        # Merge codes
+        for weapon, code_list in codes.items():
+            latest_codes.setdefault(weapon, [])
+            for code in code_list:
+                if isinstance(code, dict):
+                    if not any(c.get("code") == code["code"] for c in latest_codes[weapon] if isinstance(c, dict)):
+                        latest_codes[weapon].append(code)
+                else:
+                    if code not in latest_codes[weapon]:
+                        latest_codes[weapon].append(code)
+        content = json.dumps(latest_codes, indent=4)
+        if file:
+            repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
+        else:
+            repo.create_file(BUILD_CODES_FILE, "create build codes", content)
+    except Exception as e:
+        st.warning(f"GitHub save failed: {e}")
+
+def load_user_rolls_github():
+    if repo is None:
+        return {}
+    try:
+        file_content = repo.get_contents(USER_ROLLS_FILE)
+        return json.loads(file_content.decoded_content.decode())
+    except Exception:
+        return {}
+
+def save_user_rolls_github(rolls):
+    if repo is None:
+        return
+    try:
+        try:
+            file = repo.get_contents(USER_ROLLS_FILE)
+            latest_rolls = json.loads(file.decoded_content.decode())
+        except UnknownObjectException:
+            file = None
+            latest_rolls = {}
+        for user, user_roll_list in rolls.items():
+            latest_rolls.setdefault(user, [])
+            for r in user_roll_list:
+                if r not in latest_rolls[user]:
+                    latest_rolls[user].append(r)
+        content = json.dumps(latest_rolls, indent=4)
+        if file:
+            repo.update_file(USER_ROLLS_FILE, "update user rolls", content, sha=file.sha)
+        else:
+            repo.create_file(USER_ROLLS_FILE, "create user rolls", content)
+    except Exception as e:
+        st.warning(f"GitHub save failed: {e}")
+        
+# ----------------------
 # LOAD / SAVE FUNCTIONS
 # ----------------------
 def load_json_local(file_path, lock_file):
@@ -452,4 +524,5 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
