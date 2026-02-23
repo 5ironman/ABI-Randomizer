@@ -106,6 +106,7 @@ st.session_state.setdefault("weapon_filters", {})
 st.session_state.setdefault("armor_filters", {})
 st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("authenticated", False)
+st.session_state.setdefault("build_codes_updated", False)
 
 # ----------------------
 # WEAPONS DATA
@@ -212,7 +213,6 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-
 # ----------------------
 # ENSURE BUILD CODE KEYS
 # ----------------------
@@ -277,6 +277,7 @@ def remove_build_codes(weapon, codes_to_remove):
             st.session_state.build_codes[weapon].remove(code)
     save_build_codes_local(st.session_state.build_codes)
     save_build_codes_github(st.session_state.build_codes)
+    st.session_state.build_codes_updated = True
     st.success(f"Removed selected codes from {weapon}")
 
 # ----------------------
@@ -302,6 +303,11 @@ with tab1:
 
 # --- TAB 2 ---
 with tab2:
+    # Handle safe rerun after removal
+    if st.session_state.get("build_codes_updated", False):
+        st.session_state.build_codes_updated = False
+        st.experimental_rerun()
+
     st.header("Build Codes Management")
 
     # PASSWORD CHECK
@@ -336,5 +342,5 @@ with tab2:
             cols[0].markdown(f"- {code}")
             if cols[1].button("Remove", key=f"remove_{weapon}_{code}"):
                 remove_build_codes(weapon, [code])
-                st.experimental_rerun()
+
 
