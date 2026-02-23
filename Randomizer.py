@@ -2,37 +2,36 @@ import streamlit as st
 import json
 import random
 import os
-from github import Github
+from github import Github, Auth
 from github.GithubException import UnknownObjectException
 
 # ----------------------
 # CONFIG & FILE PATHS
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
-REPO_NAME = "5ironman/ABI-Randomizer"  # <-- replace with your repo
 
 # ----------------------
 # GITHUB SETUP
 # ----------------------
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", None)
-REPO_NAME = st.secrets.get("REPO_NAME", "yourusername/yourrepo")
+REPO_NAME = st.secrets.get("REPO_NAME", None)
 
 def get_github_repo():
-    if not GITHUB_TOKEN:
-        st.error("Missing GITHUB_TOKEN in Streamlit Secrets!")
+    if not GITHUB_TOKEN or not REPO_NAME:
+        st.warning("Missing GITHUB_TOKEN or REPO_NAME in Streamlit Secrets!")
         return None
-    
     try:
-        g = Github(GITHUB_TOKEN)
-        # Verify the token works by getting the authenticated user
+        g = Github(auth=Auth.Token(GITHUB_TOKEN))  # ✅ fixed deprecation warning
         user = g.get_user()
         st.sidebar.success(f"Connected as: {user.login}")
-        return g.get_repo(REPO_NAME)
+        repo = g.get_repo(REPO_NAME)
+        return repo
     except Exception as e:
-        st.error(f"GitHub Auth Error: {e}")
+        st.error(f"GitHub connection failed: {e}")
         return None
 
 repo = get_github_repo()
+
 # ----------------------
 # SAVE & LOAD FUNCTIONS
 # ----------------------
@@ -46,6 +45,8 @@ def load_build_codes_local():
     return {}
 
 def load_build_codes_github():
+    if repo is None:
+        return {}
     try:
         file_content = repo.get_contents(BUILD_CODES_FILE)
         return json.loads(file_content.decoded_content.decode())
@@ -150,10 +151,24 @@ for cat in WEAPONS_DATA.values():
             st.session_state.build_codes[weapon_name] = []
 
 # ----------------------
-# RANDOM LOADOUT FUNCTION
+# RANDOM LOADOUT FUNCTION (COMPLETELY RANDOM WEAPON)
 # ----------------------
 def generate_full_abi_loadout(lockdown=False, disable_shot_pistol=False, exclude_t1_t2=False, armored_rig_chance=0.25):
     weapons_data = WEAPONS_DATA
+
+    # Flatten all weapons into a single list for uniform randomization
+    all_weapons = []
+    for cat, weapons in weapons_data.items():
+        if disable_shot_pistol and cat in ("Shotguns", "Pistols", "Carbines"):
+            continue
+        for weapon_name, caliber in weapons.items():
+            all_weapons.append((cat, weapon_name, caliber))
+
+    if not all_weapons:
+        st.warning("No weapons available with current filters.")
+        return ""
+
+    category, weapon, caliber = random.choice(all_weapons)
 
     ammo_data = {
         "5.45x39mm": ["HP", "PS", "BP", "BS", "PP", "PRS"],
@@ -172,6 +187,9 @@ def generate_full_abi_loadout(lockdown=False, disable_shot_pistol=False, exclude
         "9x39mm": ["SP5", "SP6", "7N9", "7N12"]
     }
 
+    ammo_display = f"{caliber} {random.choice(ammo_data.get(caliber, [caliber]))}"
+
+    # Armor, helmets, backpacks (same as before)
     armors = {
         "Tier 1": ["Retro Sapper Bulletproof Vest", "Retro Bulletproof Vest", "Old Security Body Armor"],
         "Tier 2": ["Security Body Armor", "220 Body Armor", "Retro Infantry Bulletproof Vest"],
@@ -219,17 +237,6 @@ def generate_full_abi_loadout(lockdown=False, disable_shot_pistol=False, exclude
         "Chapman Military Backpack", "AMP7 Assault Backpack", "Retro Marching Backpack", "LUC Expanded Tactical Backpack",
         "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
     ]
-
-    available_categories = list(weapons_data.keys())
-    if disable_shot_pistol:
-        available_categories = [c for c in available_categories if c not in ("Shotguns", "Pistols", "Carbines")]
-    if not available_categories:
-        available_categories = list(weapons_data.keys())
-
-    category = random.choice(available_categories)
-    weapon, caliber = random.choice(list(weapons_data[category].items()))
-
-    ammo_display = f"{caliber} {random.choice(ammo_data.get(caliber, [caliber]))}"
 
     armor_tiers = list(armors.keys())
     helmet_tiers = list(helmets.keys())
@@ -296,7 +303,7 @@ if st.button("Generate Loadout"):
 # --- Edit Build Codes ---
 st.header("Edit Build Codes")
 weapon_choice = st.selectbox("Select Weapon", list(st.session_state.build_codes.keys()))
-new_code = st.text_input("Enter New Build Code")
+new_code = st.text_input("Enter New Build Code", key="new_code_input")
 
 if st.button("Add Build Code"):
     if new_code and new_code not in st.session_state.build_codes[weapon_choice]:
@@ -308,8 +315,8 @@ if st.button("Add Build Code"):
                 commit_message=f"Added build code {new_code} to {weapon_choice}"
             )
         st.success(f"Added build code {new_code} to {weapon_choice}")
+        st.session_state.new_code_input = ""
+        st.experimental_rerun()  # refresh UI
 
 st.subheader("Current Build Codes")
 st.json(st.session_state.build_codes)
-
-
