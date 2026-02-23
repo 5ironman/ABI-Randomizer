@@ -5,6 +5,7 @@ import os
 from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from filelock import FileLock
+from datetime import datetime
 import pandas as pd
 
 # ----------------------
@@ -72,8 +73,13 @@ def save_build_codes_github(codes):
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
-                if code not in latest_codes[weapon]:
-                    latest_codes[weapon].append(code)
+                # Avoid duplicates
+                if isinstance(code, dict):
+                    if not any(c.get("code") == code["code"] for c in latest_codes[weapon] if isinstance(c, dict)):
+                        latest_codes[weapon].append(code)
+                else:
+                    if code not in latest_codes[weapon]:
+                        latest_codes[weapon].append(code)
         content = json.dumps(latest_codes, indent=4)
         if file:
             repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
@@ -257,7 +263,7 @@ def generate_loadout():
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
     backpack = random.choice(backpacks)
     codes = st.session_state.build_codes.get(weapon, [])
-    code = random.choice(codes) if codes else None
+    code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
     lines = [f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
     if code:
         lines.append(f"BUILD CODE: {code}")
@@ -267,19 +273,26 @@ def generate_loadout():
 # ----------------------
 # BUILD CODE MANAGEMENT
 # ----------------------
-def add_build_code(weapon, new_code):
+def add_build_code(weapon, new_code, username):
     new_code = new_code.strip()
     if not new_code:
         return
+    if not username.strip():
+        st.error("You must enter a username before adding a build code.")
+        return
+    
     latest_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
     latest_codes.setdefault(weapon, [])
     st.session_state.build_codes.setdefault(weapon, [])
-    if new_code not in latest_codes[weapon]:
-        latest_codes[weapon].append(new_code)
+    
+    existing_codes = [c["code"] for c in latest_codes[weapon] if isinstance(c, dict)]
+    if new_code not in existing_codes:
+        entry = {"code": new_code, "added_by": username, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        latest_codes[weapon].append(entry)
         st.session_state.build_codes[weapon] = latest_codes[weapon]
         save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
         save_build_codes_github(latest_codes)
-        st.success(f"Added '{new_code}' to {weapon}")
+        st.success(f"Added '{new_code}' to {weapon} by {username}")
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
@@ -319,6 +332,9 @@ with tab1:
 # ---------------------- BUILD CODES TAB ----------------------
 with tab2:
     st.header("Build Codes Management")
+    st.subheader("Enter Username")
+    username = st.text_input("Username", value=st.session_state.username, key="buildcodes_username")
+    
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
         if st.button("Submit Password"):
@@ -332,13 +348,17 @@ with tab2:
         weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
         new_code = st.text_input("Enter new build code")
         if st.button("Add Code"):
-            add_build_code(weapon_choice, new_code)
+            add_build_code(weapon_choice, new_code, username)
+        
         with st.expander("All Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
                 if codes:
-                    for code in codes:
-                        st.markdown(f"- {code}")
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
                 else:
                     st.markdown("- No codes yet")
 
@@ -357,15 +377,20 @@ with tab3:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
+        # Show build codes
         with st.expander("All Weapon Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
                 if codes:
-                    for code in codes:
-                        st.markdown(f"- {code}")
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
                 else:
                     st.markdown("- No codes yet")
 
+        # Show user roll history
         with st.expander("User Roll History"):
             search_query = st.text_input("Search Users")
             for user, rolls in st.session_state.user_rolls.items():
@@ -373,28 +398,5 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
-
-        with st.expander("Analytics"):
-            weapon_count = {}
-            ammo_count = {}
-            for rolls in st.session_state.user_rolls.values():
-                for roll in rolls:
-                    for line in roll.split("\n"):
-                        if line.startswith("WEAPON: "):
-                            w = line.replace("WEAPON: ","")
-                            weapon_count[w] = weapon_count.get(w, 0) + 1
-                        if line.startswith("AMMO: "):
-                            a = line.replace("AMMO: ","")
-                            ammo_count[a] = ammo_count.get(a, 0) + 1
-
-            if weapon_count:
-                top_weapons = sorted(weapon_count.items(), key=lambda x:x[1], reverse=True)[:5]
-                st.subheader("Top 5 Weapons")
-                st.bar_chart(pd.DataFrame(top_weapons, columns=["Weapon", "Count"]).set_index("Weapon"))
-
-            if ammo_count:
-                st.subheader("Ammo Distribution")
-                ammo_df = pd.DataFrame(list(ammo_count.items()), columns=["Ammo", "Count"]).set_index("Ammo")
-                st.bar_chart(ammo_df)
 
 
