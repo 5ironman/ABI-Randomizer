@@ -1,3 +1,5 @@
+
+
 import streamlit as st
 import json
 import random
@@ -339,46 +341,41 @@ backpacks = [
 ]
 MAPS = ["Armory", "Farm", "Valley", "Airport", "Northridge", "TV Station"]
 
+# Initialize armor/helmet filters
+for tier in armors:
+    st.session_state.armor_filters.setdefault(tier, True)
+for tier in helmets:
+    st.session_state.helmet_filters.setdefault(tier, True)
+
 # ----------------------
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    # Check that we have maps
-    if not MAPS:
-        return "No maps available."
-
+    global WEAPONS_DATA, ammo_data, armors, helmets, backpacks, MAPS
+    if not MAPS: return "No maps available."
     map_choice = random.choice(MAPS)
 
-    # Filter weapons based on category filters
     weapons = [(cat, w, cal) 
                for cat, items in WEAPONS_DATA.items()
                if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
-    if not weapons:
-        return "No weapons available. Please enable at least one category."
+    if not weapons: return "No weapons available."
 
-    # Select weapon
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal, [cal]))}" if cal else "No ammo"
 
-    # Armor and helmet tiers
     armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
     helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
     if not armor_tiers: armor_tiers = list(armors.keys())
     if not helmet_tiers: helmet_tiers = list(helmets.keys())
 
-    # Select armor and helmet
     armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})" if armors else "No armor"
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})" if helmets else "No helmet"
-
-    # Select backpack
     backpack = random.choice(backpacks) if backpacks else "No backpack"
 
-    # Build code
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
 
-    # Build loadout text
     lines = [
         f"MAP: {map_choice}",
         f"CLASS: {cat}",
@@ -387,13 +384,10 @@ def generate_loadout():
     ]
     if code:
         lines.append(f"BUILD CODE: {code}")
-    lines += [
-        f"ARMOR: {armor_piece}",
-        f"HELMET: {helmet_piece}",
-        f"BACKPACK: {backpack}"
-    ]
+    lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
 
     return "\n".join(lines)
+
 # ----------------------
 # BUILD CODE MANAGEMENT
 # ----------------------
@@ -402,30 +396,23 @@ def add_build_code(weapon, new_code, username):
     if not new_code or not username.strip():
         st.error("Username and code cannot be empty.")
         return
-
     latest_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
     latest_codes.setdefault(weapon, [])
     st.session_state.build_codes.setdefault(weapon, [])
 
     existing_codes = [c["code"] for c in latest_codes[weapon] if isinstance(c, dict)]
     if new_code not in existing_codes:
-        entry = {
-            "code": new_code,
-            "added_by": username,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
+        entry = {"code": new_code, "added_by": username, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         latest_codes[weapon].append(entry)
         st.session_state.build_codes[weapon] = latest_codes[weapon]
-
         save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
         save_build_codes_github(latest_codes)
-
         st.success(f"Added '{new_code}' to {weapon} by {username}")
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
 # ----------------------
-# STREAMLIT UI TABS
+# STREAMLIT TABS
 # ----------------------
 if st.session_state.user_authenticated:
     st.sidebar.write(f"Logged in as: {st.session_state.username}")
@@ -434,21 +421,23 @@ if st.session_state.user_authenticated:
         tabs_list.append("Admin Panel")
     tabs = st.tabs(tabs_list)
 
-    # ----------------------
-    # RANDOMIZER TAB
-    # ----------------------
+    # --- RANDOMIZER ---
     with tabs[0]:
         st.subheader("Randomizer")
-        st.text(generate_loadout())
+        if st.button("Generate Loadout"):
+            loadout = generate_loadout()
+            st.code(loadout)
+            user = st.session_state.username
+            st.session_state.user_rolls.setdefault(user, []).append(loadout)
+            st.session_state.user_rolls[user] = st.session_state.user_rolls[user][-50:]
+            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+            save_user_rolls_github(st.session_state.user_rolls)
 
-    # ----------------------
-    # BUILD CODES TAB
-    # ----------------------
+    # --- BUILD CODES ---
     with tabs[1]:
         st.subheader("Build Codes Management")
         username = st.session_state.username
-
-        if not st.session_state.get("build_codes_authenticated", False):
+        if not st.session_state.build_codes_authenticated:
             with st.form("build_code_password_form"):
                 pw_input = st.text_input("Enter password to edit build codes", type="password")
                 pw_submit = st.form_submit_button("Submit")
@@ -460,7 +449,7 @@ if st.session_state.user_authenticated:
                 else:
                     st.error("Incorrect password")
 
-        if st.session_state.get("build_codes_authenticated", False):
+        if st.session_state.build_codes_authenticated:
             st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
             weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
             new_code = st.text_input("Enter new build code")
@@ -479,13 +468,11 @@ if st.session_state.user_authenticated:
                     else:
                         st.markdown("- No codes yet")
 
-    # ----------------------
-    # ADMIN PANEL
-    # ----------------------
+    # --- ADMIN PANEL ---
     if "Admin Panel" in tabs_list:
         with tabs[2]:
             st.header("Admin Panel")
-            if not st.session_state.get("admin_authenticated", False):
+            if not st.session_state.admin_authenticated:
                 with st.form("admin_password_form"):
                     admin_pw_input = st.text_input("Enter Admin Password", type="password")
                     admin_submit = st.form_submit_button("Submit Admin Password")
@@ -497,7 +484,7 @@ if st.session_state.user_authenticated:
                     else:
                         st.error("Incorrect password")
 
-            if st.session_state.get("admin_authenticated", False):
+            if st.session_state.admin_authenticated:
                 if repo:
                     st.session_state.build_codes = load_build_codes_github()
                     st.session_state.user_rolls = load_user_rolls_github()
@@ -510,12 +497,8 @@ if st.session_state.user_authenticated:
                 for weapon, codes in st.session_state.build_codes.items():
                     for entry in codes:
                         if isinstance(entry, dict):
-                            rows.append({
-                                "Weapon": weapon,
-                                "Code": entry.get("code"),
-                                "Added By": entry.get("added_by"),
-                                "Timestamp": entry.get("timestamp")
-                            })
+                            rows.append({"Weapon": weapon, "Code": entry.get("code"),
+                                         "Added By": entry.get("added_by"), "Timestamp": entry.get("timestamp")})
                 if rows:
                     st.dataframe(rows, use_container_width=True)
                 else:
@@ -533,12 +516,4 @@ if st.session_state.user_authenticated:
                                 st.text("No rolls yet.")
                 else:
                     st.info("No users found.")
-
-
-
-
-
-
-
-
 
