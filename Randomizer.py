@@ -153,25 +153,30 @@ st.session_state.setdefault("user_accounts", load_json_local(USER_ACCOUNTS_FILE,
 # USER ACCOUNT LOGIN/REGISTER SYSTEM
 # ----------------------
 accounts = st.session_state.user_accounts
+
 if not st.session_state.authenticated:
     st.subheader("Login / Register")
     login_tab, register_tab = st.tabs(["Login", "Register"])
     
-    # Login
+    # --- LOGIN ---
     with login_tab:
         login_user = st.text_input("Username", key="login_user")
         login_pw = st.text_input("Password", type="password", key="login_pw")
         if st.button("Login"):
-            if login_user in accounts and accounts[login_user] == login_pw:
-                st.session_state.username = login_user
-                st.session_state.authenticated = True
-                st.success(f"Welcome back, {login_user}!")
-                cookies["username"] = login_user
-                cookies.save()
+            if login_user in accounts:
+                stored_hash = accounts[login_user].encode()
+                if bcrypt.checkpw(login_pw.encode(), stored_hash):
+                    st.session_state.username = login_user
+                    st.session_state.authenticated = True
+                    st.success(f"Welcome back, {login_user}!")
+                    cookies["username"] = login_user
+                    cookies.save()
+                else:
+                    st.error("Incorrect password.")
             else:
-                st.error("Incorrect username or password.")
+                st.error("Username does not exist.")
     
-    # Register
+    # --- REGISTER ---
     with register_tab:
         reg_user = st.text_input("Choose Username", key="reg_user")
         reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
@@ -181,14 +186,13 @@ if not st.session_state.authenticated:
             elif reg_user in accounts:
                 st.error("Username already exists.")
             else:
-                accounts[reg_user] = reg_pw
+                # Hash password before saving
+                hashed_pw = bcrypt.hashpw(reg_pw.encode(), bcrypt.gensalt()).decode()
+                accounts[reg_user] = hashed_pw
                 save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
                 st.success(f"Account created! You can now login as {reg_user}.")
     
     st.stop()
-
-user = st.session_state.username
-st.session_state.user_rolls.setdefault(user, [])
 
 # ----------------------
 # KEEP ALL YOUR FILTERS / DATA
@@ -524,5 +528,6 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
 
