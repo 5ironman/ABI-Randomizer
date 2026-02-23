@@ -7,6 +7,7 @@ from github.GithubException import UnknownObjectException
 from filelock import FileLock
 from datetime import datetime
 from streamlit_cookies_manager import EncryptedCookieManager
+import bcrypt
 
 # ----------------------
 # CONFIG
@@ -528,6 +529,7 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
 
 
