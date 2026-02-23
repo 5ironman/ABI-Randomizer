@@ -77,9 +77,9 @@ if "build_codes" not in st.session_state:
     codes = load_build_codes_github() if repo else load_build_codes_local()
     st.session_state.build_codes = codes
 
-if "code_to_remove" not in st.session_state:
-    st.session_state.code_to_remove = None
-
+# ----------------------
+# WEAPONS DATA
+# ----------------------
 WEAPONS_DATA = {
     "Assault Rifles": {
         "HK416": "5.56x45mm", "M4A1": "5.56x45mm", "AK-102": "5.56x45mm",
@@ -239,19 +239,21 @@ def generate_loadout():
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# Filters
+# Weapon filters
 st.subheader("Weapon Categories")
 for cat in WEAPONS_DATA:
     st.session_state.weapon_filters[cat] = st.checkbox(
         cat, value=st.session_state.weapon_filters[cat], key=f"weapon_chk_{cat}"
     )
 
+# Armor filters
 st.subheader("Armor Tiers")
 for tier in armors:
     st.session_state.armor_filters[tier] = st.checkbox(
         tier, value=st.session_state.armor_filters[tier], key=f"armor_chk_{tier}"
     )
 
+# Helmet filters
 st.subheader("Helmet Tiers")
 for tier in helmets:
     st.session_state.helmet_filters[tier] = st.checkbox(
@@ -293,15 +295,14 @@ for weapon, codes in st.session_state.build_codes.items():
         cols[0].text(code)
         remove_key = f"remove_{weapon}_{i}"
         if cols[1].button("Remove", key=remove_key):
-            st.session_state.code_to_remove = (weapon, i)
+            # Remove and save immediately
+            st.session_state.build_codes[weapon].pop(i)
+            save_build_codes_local(st.session_state.build_codes)
+            save_build_codes_github(st.session_state.build_codes)
+            st.success(f"Removed code for {weapon}")
+            break  # exit loop to avoid iterator invalidation
 
-# Perform removal safely
-if st.session_state.code_to_remove:
-    weapon, index = st.session_state.code_to_remove
-    st.session_state.build_codes[weapon].pop(index)
-    save_build_codes_local(st.session_state.build_codes)
-    save_build_codes_github(st.session_state.build_codes)
-    st.session_state.code_to_remove = None
-    st.experimental_rerun()
-
+# Display all codes for reference
 st.json(st.session_state.build_codes)
+
+
