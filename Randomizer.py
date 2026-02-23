@@ -247,26 +247,26 @@ def generate_loadout():
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-def checkbox_grid(options, state_dict, prefix, cols_per_row=4):
-    """Display checkboxes in a left-to-right grid"""
-    keys = list(options)
-    for i in range(0, len(keys), cols_per_row):
-        row_keys = keys[i:i+cols_per_row]
-        cols = st.columns(len(row_keys))
-        for j, key in enumerate(row_keys):
-            state_dict[key] = cols[j].checkbox(key, value=state_dict[key], key=f"{prefix}_{key}")
-
-# Weapon Categories
+# Weapon Categories Checkboxes
 st.subheader("Weapon Categories")
-checkbox_grid(WEAPONS_DATA, st.session_state.weapon_filters, "weapon")
+for cat in WEAPONS_DATA:
+    st.session_state.weapon_filters[cat] = st.checkbox(
+        cat, value=st.session_state.weapon_filters[cat], key=f"weapon_chk_{cat}"
+    )
 
-# Armor Tiers
+# Armor Tiers Checkboxes
 st.subheader("Armor Tiers")
-checkbox_grid(armors, st.session_state.armor_filters, "armor")
+for tier in armors:
+    st.session_state.armor_filters[tier] = st.checkbox(
+        tier, value=st.session_state.armor_filters[tier], key=f"armor_chk_{tier}"
+    )
 
-# Helmet Tiers
+# Helmet Tiers Checkboxes
 st.subheader("Helmet Tiers")
-checkbox_grid(helmets, st.session_state.helmet_filters, "helmet")
+for tier in helmets:
+    st.session_state.helmet_filters[tier] = st.checkbox(
+        tier, value=st.session_state.helmet_filters[tier], key=f"helmet_chk_{tier}"
+    )
 
 # Generate Loadout Button
 st.header("Generate Loadout")
