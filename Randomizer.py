@@ -76,9 +76,6 @@ def save_build_codes_github(codes):
                 if isinstance(code, dict):
                     if not any(c.get("code") == code["code"] for c in latest_codes[weapon] if isinstance(c, dict)):
                         latest_codes[weapon].append(code)
-                else:
-                    if code not in latest_codes[weapon]:
-                        latest_codes[weapon].append(code)
         content = json.dumps(latest_codes, indent=4)
         if file:
             repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
@@ -138,7 +135,6 @@ if not st.session_state.username.strip():
     username_input = st.text_input("Enter your username to continue:")
     if username_input.strip():
         st.session_state.username = username_input.strip()
-        st.experimental_rerun()
     else:
         st.warning("You must enter a username to access any part of the site.")
         st.stop()
@@ -279,7 +275,7 @@ def generate_loadout():
     return "\n".join(lines)
 
 # ----------------------
-# APP TABS
+# TABS
 # ----------------------
 tab1, tab2, tab3 = st.tabs(["Randomizer", "Build Codes", "Admin Panel"])
 
@@ -334,5 +330,3 @@ with tab3:
             st.markdown(f"**{weapon}**")
             for c in codes:
                 st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
-
-
