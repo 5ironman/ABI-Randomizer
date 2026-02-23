@@ -196,6 +196,7 @@ if "helmet_filters" not in st.session_state:
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
+# Weapon Categories Buttons
 st.subheader("Weapon Categories")
 cols = st.columns(len(WEAPONS_DATA))
 for i, cat in enumerate(WEAPONS_DATA):
@@ -205,6 +206,7 @@ for i, cat in enumerate(WEAPONS_DATA):
     ):
         st.session_state.weapon_filters[cat] = not st.session_state.weapon_filters[cat]
 
+# Armor Tiers Buttons
 st.subheader("Armor Tiers")
 cols = st.columns(len(armors))
 for i, tier in enumerate(armors):
@@ -214,6 +216,7 @@ for i, tier in enumerate(armors):
     ):
         st.session_state.armor_filters[tier] = not st.session_state.armor_filters[tier]
 
+# Helmet Tiers Buttons
 st.subheader("Helmet Tiers")
 cols = st.columns(len(helmets))
 for i, tier in enumerate(helmets):
@@ -223,6 +226,13 @@ for i, tier in enumerate(helmets):
     ):
         st.session_state.helmet_filters[tier] = not st.session_state.helmet_filters[tier]
 
+# ----------------------
+# GENERATOR UI
+# ----------------------
+st.header("Generate Loadout")
+
+if st.button("Generate Loadout"):
+    st.code(generate_loadout(lockdown=False, disable=False, exclude=False))
 # ----------------------
 # RANDOMIZER
 # ----------------------
@@ -327,3 +337,4 @@ if st.button("Add Code"):
         st.success("Build code added")
 
 st.json(st.session_state.build_codes)
+
