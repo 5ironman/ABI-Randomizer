@@ -278,10 +278,10 @@ if st.button("Generate Loadout", key="generate_loadout_btn"):
 # ----------------------
 st.header("Build Codes")
 
+# Add new build code
 weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()), key="weapon_choice")
 new_code = st.text_input("New Build Code", key="new_code")
 
-# Add Code Function
 def add_code():
     code = st.session_state.new_code
     weapon = st.session_state.weapon_choice
@@ -294,17 +294,22 @@ def add_code():
 
 st.button("Add Code", on_click=add_code, key="add_code_btn")
 
-# Display existing codes with remove buttons
-st.subheader(f"Existing Build Codes for {weapon_choice}")
-codes = st.session_state.build_codes.get(weapon_choice, [])
-for i, code in enumerate(codes):
-    cols = st.columns([4, 1])
-    cols[0].text(code)
-    remove_key = f"remove_{weapon_choice}_{i}"
-    if cols[1].button("Remove", key=remove_key):
-        st.session_state.build_codes[weapon_choice].pop(i)
-        save_build_codes_local(st.session_state.build_codes)
-        save_build_codes_github(st.session_state.build_codes)
-        st.experimental_rerun()  # Refresh to update the UI
+# Display all weapons with their codes and remove buttons
+st.subheader("Existing Build Codes")
+
+for weapon, codes in st.session_state.build_codes.items():
+    if not codes:
+        continue
+    st.markdown(f"**{weapon}**")
+    for i, code in enumerate(codes):
+        cols = st.columns([4, 1])
+        cols[0].text(code)
+        remove_key = f"remove_{weapon}_{i}"
+        if cols[1].button("Remove", key=remove_key):
+            st.session_state.build_codes[weapon].pop(i)
+            save_build_codes_local(st.session_state.build_codes)
+            save_build_codes_github(st.session_state.build_codes)
+            st.experimental_rerun()  # Refresh the UI
 
 st.json(st.session_state.build_codes)
+
