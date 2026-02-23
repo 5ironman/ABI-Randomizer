@@ -6,7 +6,6 @@ from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from filelock import FileLock
 from datetime import datetime
-import pandas as pd
 
 # ----------------------
 # CONFIG
@@ -73,7 +72,6 @@ def save_build_codes_github(codes):
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
-                # Avoid duplicates
                 if isinstance(code, dict):
                     if not any(c.get("code") == code["code"] for c in latest_codes[weapon] if isinstance(c, dict)):
                         latest_codes[weapon].append(code)
@@ -131,6 +129,14 @@ st.session_state.setdefault("authenticated", False)
 st.session_state.setdefault("admin_authenticated", False)
 st.session_state.setdefault("username", "")
 st.session_state.setdefault("user_rolls", load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
+
+# ----------------------
+# GLOBAL USERNAME ENFORCEMENT
+# ----------------------
+if not st.session_state.username.strip():
+    st.warning("You must enter a username to access any part of the site.")
+    st.session_state.username = st.text_input("Enter your username to continue:")
+    st.stop()
 
 # ----------------------
 # WEAPONS DATA
@@ -237,6 +243,7 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
+
 # Ensure all weapons have a build code list
 for cat in WEAPONS_DATA.values():
     st.session_state.build_codes.update({w: [] for w in cat if w not in st.session_state.build_codes})
@@ -299,41 +306,34 @@ def add_build_code(weapon, new_code, username):
 # ----------------------
 # STREAMLIT UI WITH TABS
 # ----------------------
-st.title("ABI Randomizer & Build Codes")
 tab1, tab2, tab3 = st.tabs(["Randomizer", "Build Codes", "Admin Panel"])
 
 # ---------------------- RANDOMIZER TAB ----------------------
 with tab1:
-    st.subheader("Enter Username")
-    st.session_state.username = st.text_input("Username", value=st.session_state.username)
-    if not st.session_state.username.strip():
-        st.warning("Please enter a username to use the randomizer.")
-    else:
-        st.subheader("Weapon Categories")
-        for cat in WEAPONS_DATA:
-            st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
-        st.subheader("Armor Tiers")
-        for tier in armors:
-            st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
-        st.subheader("Helmet Tiers")
-        for tier in helmets:
-            st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
+    st.subheader("Weapon Categories")
+    for cat in WEAPONS_DATA:
+        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+    st.subheader("Armor Tiers")
+    for tier in armors:
+        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+    st.subheader("Helmet Tiers")
+    for tier in helmets:
+        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
 
-        st.header("Generate Loadout")
-        if st.button("Generate Loadout"):
-            loadout = generate_loadout()
-            st.code(loadout)
-            user = st.session_state.username
-            st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
-            st.session_state.user_rolls.setdefault(user, []).append(loadout)
-            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-            save_user_rolls_github(st.session_state.user_rolls)
+    st.header("Generate Loadout")
+    if st.button("Generate Loadout"):
+        loadout = generate_loadout()
+        st.code(loadout)
+        user = st.session_state.username
+        st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+        st.session_state.user_rolls.setdefault(user, []).append(loadout)
+        save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+        save_user_rolls_github(st.session_state.user_rolls)
 
 # ---------------------- BUILD CODES TAB ----------------------
 with tab2:
-    st.header("Build Codes Management")
-    st.subheader("Enter Username")
-    username = st.text_input("Username", value=st.session_state.username, key="buildcodes_username")
+    st.subheader("Build Codes Management")
+    username = st.session_state.username
     
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
@@ -364,7 +364,6 @@ with tab2:
 
 # ---------------------- ADMIN PANEL TAB ----------------------
 with tab3:
-    st.header("Admin Panel")
     if not st.session_state.admin_authenticated:
         admin_pw = st.text_input("Enter Admin Password", type="password")
         if admin_pw == ADMIN_PASSWORD:
@@ -398,5 +397,4 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
-
 
