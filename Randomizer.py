@@ -137,8 +137,9 @@ ammo_data = {
     ".45 ACP": ["HS", "FMJ", "AP"],
     "7.62x25mm": ["PT", "PST", "LRN", "AKBS", "PS"],
     "9x19mm": ["PSO", "PST", "AP6.3", "DumDum", "7N31"],
-    "12x70mm": ["Type 5 buckshot", "Type 7 buckshot", "Type 8 buckshot", "Flechette Buckshot", "Dual Shell",
-                "Led Slug", "Grizzly Slug", "RIP Slug", "GT Slug", "AP Slug"],
+    "12x70mm": ["Type 5 buckshot", "Type 7 buckshot", "Type 8 buckshot",
+                "Flechette Buckshot", "Dual Shell", "Led Slug", "Grizzly Slug",
+                "RIP Slug", "GT Slug", "AP Slug"],
     "5.7x28mm": ["SS197SR", "SS190", "R37.X", "L191", "SS198"],
     "9x39mm": ["SP5", "SP6", "7N9", "7N12"]
 }
@@ -202,7 +203,6 @@ if "helmet_filters" not in st.session_state:
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    # Filter weapons based on selected categories
     weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
                if st.session_state.weapon_filters[cat]
                for w, cal in items.items()]
@@ -212,13 +212,11 @@ def generate_loadout():
     category, weapon, caliber = random.choice(weapons)
     ammo = f"{caliber} {random.choice(ammo_data.get(caliber,[caliber]))}"
 
-    # Filter armor and helmet tiers
     armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
     helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
     if not armor_tiers or not helmet_tiers:
         return "No armor/helmet tiers available with current filters."
 
-    # Random armor & helmet with tier included
     armor_tier = random.choice(armor_tiers)
     armor_piece = f"{random.choice(armors[armor_tier])} ({armor_tier})"
 
@@ -227,7 +225,6 @@ def generate_loadout():
 
     backpack = random.choice(Backpacks)
 
-    # Get build code if exists
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice(codes) if codes else None
 
@@ -298,22 +295,24 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# Show all weapons + codes + remove buttons
+# Existing codes with remove
 st.subheader("Existing Build Codes")
+to_remove = None
+
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
     st.markdown(f"**{weapon}**")
     for i, code in enumerate(codes):
-        cols = st.columns([4,1])
+        cols = st.columns([4, 1])
         cols[0].text(code)
         remove_key = f"remove_{weapon}_{i}"
         if cols[1].button("Remove", key=remove_key):
-            st.session_state.build_codes[weapon].pop(i)
-            save_build_codes_local(st.session_state.build_codes)
-            save_build_codes_github(st.session_state.build_codes)
-            st.success(f"Removed code for {weapon}")
-            break  # exit loop to avoid iterator invalidation
+            to_remove = (weapon, i)
 
-# Display all codes for reference
-st.json(st.session_state.build_codes)
+if to_remove:
+    weapon, i = to_remove
+    st.session_state.build_codes[weapon].pop(i)
+    save_build_codes_local(st.session_state.build_codes)
+    save_build_codes_github(st.session_state.build_codes)
+    st.success(f"Removed code for {weapon}")
