@@ -15,8 +15,8 @@ BUILD_CODES_FILE = "build_codes.json"
 USER_ROLLS_FILE = "user_rolls.json"
 LOCK_FILE = BUILD_CODES_FILE + ".lock"
 USER_LOCK_FILE = USER_ROLLS_FILE + ".lock"
-BUILD_CODES_PASSWORD = "ABI-RANDOM123"
-ADMIN_PASSWORD = "5ironman17admin"
+BUILD_CODES_PASSWORD = st.secrets["build_codes_password"]
+ADMIN_PASSWORD = st.secrets["admin_password"]
 
 # ----------------------
 # GITHUB CONFIG
@@ -450,6 +450,7 @@ if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
                         st.markdown(f"**{user}** ({len(rolls)} rolls)")
                         for r in rolls[-5:]:
                             st.markdown(f"- {r}")
+
 
 
 
