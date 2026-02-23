@@ -152,21 +152,21 @@ elif not st.session_state.username:
         username_input = st.text_input("Enter your username:")
         submitted = st.form_submit_button("Submit")
     
-    if submitted:
-        username_input = username_input.strip()
-        if not username_input:
-            st.error("Username cannot be empty.")
-        elif username_input.lower() in map(str.lower, existing_users):
-            st.error("Username already taken.")
-        else:
-            st.session_state.username = username_input
-            cookies["username"] = username_input
-            cookies.save()
-            st.success(f"Welcome, {username_input}!")
-            st.experimental_rerun()
-    
-    if not st.session_state.username:
-        st.stop()
+        if submitted:
+            username_input = username_input.strip()
+            if not username_input:
+                st.error("Username cannot be empty.")
+            elif username_input.lower() in map(str.lower, existing_users):
+                st.error("Username already taken.")
+            else:
+                st.session_state.username = username_input
+                cookies["username"] = username_input
+                cookies.save()
+                st.success(f"Welcome, {username_input}!")
+
+# If username is still empty, stop the app
+if not st.session_state.username:
+    st.stop()
 
 # ----------------------
 # WEAPONS DATA
@@ -464,5 +464,6 @@ if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
         active_users = list(st.session_state.user_rolls.keys())
         st.write(f"Currently active users: {len(active_users)}")
         st.write(", ".join(active_users))
+
 
 
