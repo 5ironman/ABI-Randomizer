@@ -1,19 +1,2 @@
 {
-    "Guest": [
-        "CLASS: Carbines\nWEAPON: M96\nAMMO: 5.56x45mm FMJ Hunting\nARMOR: SEK Fortress Body Armor (Tier 1)\nHELMET: SH18 Military Helmet (Tier 5)\nBACKPACK: Outdoor Travel Backpack"
-    ],
-    "5ironman": [
-        "CLASS: Marksman Rifles\nWEAPON: SVDS\nAMMO: 7.62x54mm 7N37\nARMOR: Spartan B Body Armor (Tier 4)\nHELMET: 6BNT Helmet (Tier 3)\nBACKPACK: AMP7 Assault Backpack",
-        "CLASS: Marksman Rifles\nWEAPON: MK14\nAMMO: 7.62x51mm UN\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Motorcycle Helmet (Tier 1)\nBACKPACK: Retro Marching Backpack",
-        "CLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm DumDum\nARMOR: Old Security Body Armor (Tier 1)\nHELMET: RST Special Forces Helmet (Tier 1)\nBACKPACK: RUSH Tactical Backpack",
-        "CLASS: SMGs\nWEAPON: MPX\nAMMO: 9x19mm PST\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: RST Special Forces Helmet (Tier 6)\nBACKPACK: Chapman Military Backpack",
-        "CLASS: Sniper Rifles\nWEAPON: SJ16\nAMMO: .338 Lapua FMJ\nARMOR: Old Security Body Armor (Tier 1)\nHELMET: Motorcycle Helmet (Tier 6)\nBACKPACK: AMP7 Assault Backpack",
-        "CLASS: Sniper Rifles\nWEAPON: SJ16\nAMMO: .338 Lapua FMJ\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: SH65 Military Helmet (Tier 1)\nBACKPACK: RAL Heavy Military Backpack",
-        "CLASS: Sniper Rifles\nWEAPON: M24\nAMMO: 7.62x51mm M62\nARMOR: Old Security Body Armor (Tier 1)\nHELMET: Kelsey Fire Helmet (Tier 6)\nBACKPACK: Large Camping Backpack",
-        "CLASS: Sniper Rifles\nWEAPON: M24\nAMMO: 7.62x51mm M61\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: D009 Blast Helmet (Tier 6)\nBACKPACK: Simple Backpack",
-        "CLASS: SMGs\nWEAPON: T85\nAMMO: 7.62x25mm PT\nARMOR: Marshal Heavy Body Armor (Tier 3)\nHELMET: Kelsey Fire Helmet (Tier 4)\nBACKPACK: Simple Backpack",
-        "CLASS: Carbines\nWEAPON: M16\nAMMO: 5.56x45mm HP Hunting\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: IND50 Heavy Tactical Helmet (Tier 6)\nBACKPACK: Canvas Camping Backpack",
-        "CLASS: Carbines\nWEAPON: Mini14\nAMMO: 5.56x45mm M855A1\nARMOR: Old Security Body Armor (Tier 1)\nHELMET: RST Special Forces Helmet (Tier 6)\nBACKPACK: Chapman Military Backpack",
-        "CLASS: Carbines\nWEAPON: M16\nAMMO: 5.56x45mm FMJ Hunting\nARMOR: Old Security Body Armor (Tier 1)\nHELMET: 6BNT Helmet (Tier 6)\nBACKPACK: Chapman Military Backpack"
-    ]
 }
