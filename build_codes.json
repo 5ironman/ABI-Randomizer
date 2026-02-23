@@ -83,7 +83,13 @@
     "G18C": [],
     "G17": [],
     "Desert Eagle": [],
-    "Gold Deagle": [],
+    "Gold Deagle": [
+        {
+            "code": "Test 6",
+            "added_by": "5ironman incog",
+            "timestamp": "2026-02-23 21:48:33"
+        }
+    ],
     "M1911": [],
     "T54": [],
     "M9A3": [],
