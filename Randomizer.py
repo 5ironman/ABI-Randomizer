@@ -182,7 +182,6 @@ Backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-
 # ----------------------
 # ENSURE BUILD CODES
 # ----------------------
@@ -292,7 +291,7 @@ def add_code():
         st.session_state.build_codes[weapon].append(code)
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
-        st.experimental_rerun()  # refresh UI to show new checkbox
+        st.success(f"Build code '{code}' added")  # feedback
 
 st.button("Add Code", on_click=add_code)
 
@@ -302,13 +301,13 @@ for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
     st.markdown(f"**{weapon}**")
-    for code in codes[:]:  # iterate over copy
+    for code in codes[:]:  # iterate over a copy
         key = f"{weapon}_{code}"
         checked = st.checkbox(code, value=True, key=key)
         if not checked:
             st.session_state.build_codes[weapon].remove(code)
             save_build_codes_local(st.session_state.build_codes)
             save_build_codes_github(st.session_state.build_codes)
-            st.experimental_rerun()  # refresh UI so checkbox disappears
+            st.success(f"Build code '{code}' removed")  # feedback
 
 
