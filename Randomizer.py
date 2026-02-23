@@ -142,7 +142,7 @@ ammo_data = {
         "9x39mm": ["SP5", "SP6", "7N9", "7N12"]
     }
 
-    armors = {
+armors = {
         "Tier 1": ["Retro Sapper Bulletproof Vest", "Retro Bulletproof Vest", "Old Security Body Armor"],
         "Tier 2": ["Security Body Armor", "220 Body Armor", "Retro Infantry Bulletproof Vest"],
         "Tier 3": ["KN Regulation Body Armor", "PCA350 Body Armor", "Standard SWAT Armor",
@@ -157,7 +157,7 @@ ammo_data = {
                    "KN Composite Body Armor"]
     }
 
-    armored_rigs = {
+armored_rigs = {
         "Tier 2": ["M1955 Combat Vest"],
         "Tier 3": ["6B5 Armored Rig", "Sentry 3 Armored Chest", "926 Security Armored Rig"],
         "Tier 4": ["Sentry 305 Armored Rig", "TM1 Armored Rig", "TM2 Armored Rig"],
@@ -167,7 +167,7 @@ ammo_data = {
                    "AL Commander Armored Rig", "AL Assault Armored Rig"]
     }
 
-    helmets = {
+helmets = {
         "Tier 1": ["Kelsey Fire Helmet", "Lightweight Safety Helmet", "Motorcycle Helmet", "Tanker Protective Cap"],
         "Tier 2": ["Retro Military Helmet", "Retro Steel Helmet", "Security Helmet", "Aviator Helmet",
                    "Security Riot Helmet", "PAS Standard Helmet"],
@@ -182,7 +182,7 @@ ammo_data = {
                    "IND50 Heavy Tactical Helmet", "D009 Blast Helmet", "AS200 Heavy Tactical Helmet"]
     }
 
-    Backpacks = [
+Backpacks = [
         "Sling Bag", "Lightweight Camping Backpack", "Medium Camping Backpack", "Simple Backpack", "Canvas Backpack",
         "Canvas Camping Backpack", "Sports Backpack", "Cowhide Backpack", "Outdoor Travel Backpack",
         "RUSH Tactical Backpack", "Large Camping Backpack", "XA4 Tactical Backpack", "Med Field Backpack",
@@ -314,6 +314,7 @@ for weapon, codes in st.session_state.build_codes.items():
 
 # Display all codes for reference
 st.json(st.session_state.build_codes)
+
 
 
 
