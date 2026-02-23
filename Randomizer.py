@@ -5,7 +5,6 @@ import os
 from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from filelock import FileLock
-from streamlit_autorefresh import st_autorefresh
 
 # ----------------------
 # CONFIG
@@ -281,8 +280,7 @@ def add_build_code(weapon, new_code):
         save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
         save_build_codes_github(latest_codes)
         st.success(f"Added '{new_code}' to {weapon}")
-    else:
-        st.warning(f"Code '{new_code}' already exists for {weapon}")
+        st.experimental_rerun()  # Refresh to show new code
 
 # ----------------------
 # STREAMLIT UI
@@ -296,10 +294,6 @@ st.session_state.active_tab = tab_selected
 tab1_active = tab_selected == "Randomizer"
 tab2_active = tab_selected == "Build Codes"
 tab3_active = tab_selected == "Admin Panel"
-
-# Auto-refresh only for Build Codes/Admin Panel
-if tab2_active or tab3_active:
-    st_autorefresh(interval=5000, key="auto_refresh")
 
 # ---------------------- RANDOMIZER TAB ----------------------
 if tab1_active:
