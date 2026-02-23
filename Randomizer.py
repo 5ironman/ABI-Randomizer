@@ -475,17 +475,21 @@ def build_codes_tab(tab):
 # ----------------------
 def admin_panel_tab(tab):
     tab.header("Admin Panel")
+
+    # Admin password form
     if not st.session_state.admin_authenticated:
-        with tab.form("admin_password_form"):
-            admin_pw_input = tab.text_input("Enter Admin Password", type="password")
-            admin_submit = tab.form_submit_button("Submit Admin Password")
+        with st.form("admin_password_form"):  # <-- use st.form, not tab.form
+            admin_pw_input = st.text_input("Enter Admin Password", type="password")
+            admin_submit = st.form_submit_button("Submit Admin Password")
             if admin_submit:
                 if admin_pw_input == ADMIN_PASSWORD:
                     st.session_state.admin_authenticated = True
-                    tab.success("Admin access granted!")
+                    st.success("Admin access granted!")
                     st.stop()
                 else:
-                    tab.error("Incorrect password")
+                    st.error("Incorrect password")
+
+    # Admin content
     if st.session_state.admin_authenticated:
         if repo:
             st.session_state.build_codes = load_build_codes_github()
@@ -493,28 +497,32 @@ def admin_panel_tab(tab):
         else:
             st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
             st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
-        tab.subheader("All Build Codes")
+
+        st.subheader("All Build Codes")
         rows = []
         for weapon, codes in st.session_state.build_codes.items():
             for entry in codes:
                 if isinstance(entry, dict):
-                    rows.append({"Weapon": weapon, "Code": entry.get("code"), "Added By": entry.get("added_by"), "Timestamp": entry.get("timestamp")})
+                    rows.append({
+                        "Weapon": weapon,
+                        "Code": entry.get("code"),
+                        "Added By": entry.get("added_by"),
+                        "Timestamp": entry.get("timestamp")
+                    })
         if rows:
-            tab.dataframe(rows, use_container_width=True)
+            st.dataframe(rows, use_container_width=True)
         else:
-            tab.info("No build codes available.")
-        tab.divider()
-        tab.subheader("User Roll History")
+            st.info("No build codes available.")
+
+        st.divider()
+        st.subheader("User Roll History")
         if st.session_state.user_rolls:
             for user, rolls in st.session_state.user_rolls.items():
-                with tab.expander(f"{user} — {len(rolls)} rolls", expanded=False):
-                    if rolls:
-                        for i, roll in enumerate(reversed(rolls[-50:]), 1):
-                            tab.text(f"{i}. {roll}")
-                    else:
-                        tab.text("No rolls yet.")
+                with st.expander(f"{user} — {len(rolls)} rolls", expanded=False):
+                    for i, roll in enumerate(reversed(rolls[-50:]), 1):
+                        st.text(f"{i}. {roll}")
         else:
-            tab.info("No users found.")
+            st.info("No users found.")
 
 # ----------------------
 # MAIN APP TABS
@@ -529,6 +537,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
