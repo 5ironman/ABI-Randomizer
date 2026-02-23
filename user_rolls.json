@@ -2,7 +2,8 @@
     "5ironman": [
         "MAP: Northridge\nCLASS: Assault Rifles\nWEAPON: AK-74N\nAMMO: 5.45x39mm BS\nARMOR: Marshal Heavy Body Armor (Tier 2)\nHELMET: KSS2 Tactical Helmet (Tier 4)\nBACKPACK: Chapman Military Backpack",
         "{\n  \"Weapon\": \"T05 (DumDum)\",\n  \"Armor\": \"Marshal Heavy Body Armor\",\n  \"Helmet\": \"6B4 Helmet\",\n  \"Backpack\": \"Canvas Camping Backpack\",\n  \"Map\": \"Northridge\"\n}",
-        "{\n  \"Weapon\": \"SPR310 (AP Slug)\",\n  \"Armor\": \"Retro Infantry Bulletproof Vest\",\n  \"Helmet\": \"Motorcycle Helmet\",\n  \"Backpack\": \"Field Camping Backpack\",\n  \"Map\": \"Valley\"\n}"
+        "{\n  \"Weapon\": \"SPR310 (AP Slug)\",\n  \"Armor\": \"Retro Infantry Bulletproof Vest\",\n  \"Helmet\": \"Motorcycle Helmet\",\n  \"Backpack\": \"Field Camping Backpack\",\n  \"Map\": \"Valley\"\n}",
+        "{\n  \"Weapon\": \"Desert Eagle (LFNP)\",\n  \"Armor\": \"PCA350 Body Armor\",\n  \"Helmet\": \"HGB4 Offensive Helmet\",\n  \"Backpack\": \"AMP7 Assault Backpack\",\n  \"Map\": \"TV Station\"\n}"
     ],
     "5ironmanTest": [
         "MAP: Farm\nCLASS: SMGs\nWEAPON: P90\nAMMO: 5.7x28mm L191\nARMOR: Retro Bulletproof Vest (Tier 2)\nHELMET: RSP Heavy Tactical Helmet (Tier 2)\nBACKPACK: Retro Marching Backpack"
