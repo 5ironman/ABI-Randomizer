@@ -7,6 +7,7 @@
         "MAP: Northridge\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm PST\nARMOR: BT101 Tactical Body Armor (Tier 4)\nHELMET: SH50 Military Helmet (Tier 3)\nBACKPACK: RAL Heavy Military Backpack",
         "MAP: Valley\nCLASS: Assault Rifles\nWEAPON: AR-57\nAMMO: 5.7x28mm R37.X\nARMOR: Old Security Body Armor (Tier 2)\nHELMET: SH50 Military Helmet (Tier 3)\nBACKPACK: RAL Heavy Military Backpack",
         "MAP: Armory\nCLASS: Assault Rifles\nWEAPON: AN-94\nAMMO: 5.45x39mm PP\nARMOR: IMTV Samurai Full Protection (Tier 6)\nHELMET: SH18 Military Helmet (Tier 2)\nBACKPACK: Field Camping Backpack",
-        "No weapons available. Please enable at least one category."
+        "No weapons available. Please enable at least one category.",
+        "MAP: Armory\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm 7N31\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Tanker Protective Cap (Tier 5)\nBACKPACK: Chapman Military Backpack"
     ]
 }
