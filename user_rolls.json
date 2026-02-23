@@ -11,6 +11,7 @@
         "MAP: Farm\nCLASS: SMGs\nWEAPON: P90\nAMMO: 5.7x28mm L191\nARMOR: Retro Bulletproof Vest (Tier 2)\nHELMET: RSP Heavy Tactical Helmet (Tier 2)\nBACKPACK: Retro Marching Backpack",
         "**AK-74N**\n  Ammo: PP\n**MAC-10**\n  Ammo: FMJ\n**M16**\n  Ammo: M855\n**U191**\n  Ammo: DBP87\n**M24**\n  Ammo: BPZ\n**M870**\n  Ammo: RIP Slug\n**M9A3**\n  Ammo: 7N31\nArmor (Tier 3): H-LC Lightweight Body Armor\nHelmet (Tier 2): Security Riot Helmet\nBackpack: Medium Camping Backpack\nMap: Valley",
         "**TOZ-34**\n  Ammo: Type 5 buckshot\nArmor (Tier 3): PCA350 Body Armor\nHelmet (Tier 3): PAS2 Helmet\nBackpack: Outdoor Travel Backpack\nMap: Northridge",
-        "**ML Lever-Action**\n  Ammo: SJHP\nArmor (Tier 3): KN Assault Body Armor\nHelmet (Tier 5): SH Matzka 2 Helmet\nBackpack: 926 Field Backpack\nMap: Airport"
+        "**ML Lever-Action**\n  Ammo: SJHP\nArmor (Tier 3): KN Assault Body Armor\nHelmet (Tier 5): SH Matzka 2 Helmet\nBackpack: 926 Field Backpack\nMap: Airport",
+        "**AK-102**\n  Ammo: M995\nArmor (Tier 4): 6B23 Body Armor\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: AMP7 Assault Backpack\nMap: Northridge"
     ]
 }
