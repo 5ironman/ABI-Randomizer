@@ -257,7 +257,6 @@ def add_build_code(weapon, new_code):
     new_code = new_code.strip()
     if not new_code:
         return
-    # Load latest codes with lock
     latest_codes = load_build_codes_github() if repo else load_build_codes_local()
     latest_codes.setdefault(weapon, [])
     st.session_state.build_codes.setdefault(weapon, [])
@@ -293,15 +292,27 @@ tab1, tab2 = st.tabs(["Randomizer","Build Codes"])
 with tab1:
     st.subheader("Weapon Categories")
     for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat])
+        st.session_state.weapon_filters[cat] = st.checkbox(
+            cat, 
+            value=st.session_state.weapon_filters[cat],
+            key=f"weapon_{cat}"
+        )
 
     st.subheader("Armor Tiers")
     for tier in armors:
-        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier])
+        st.session_state.armor_filters[tier] = st.checkbox(
+            tier, 
+            value=st.session_state.armor_filters[tier],
+            key=f"armor_{tier}"
+        )
 
     st.subheader("Helmet Tiers")
     for tier in helmets:
-        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier])
+        st.session_state.helmet_filters[tier] = st.checkbox(
+            tier, 
+            value=st.session_state.helmet_filters[tier],
+            key=f"helmet_{tier}"
+        )
 
     st.header("Generate Loadout")
     if st.button("Generate Loadout"):
@@ -311,7 +322,6 @@ with tab1:
 with tab2:
     st.header("Build Codes Management")
 
-    # PASSWORD CHECK
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
         if st.button("Submit Password"):
@@ -337,7 +347,8 @@ with tab2:
         st.session_state.codes_to_remove = st.multiselect(
             f"Select codes to remove from {weapon_choice}",
             current_codes,
-            default=st.session_state.codes_to_remove
+            default=st.session_state.codes_to_remove,
+            key="remove_multiselect"
         )
         if st.button("Remove Selected Codes"):
             remove_build_codes(weapon_choice, st.session_state.codes_to_remove)
