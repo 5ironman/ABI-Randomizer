@@ -137,7 +137,7 @@ if not st.session_state.username.strip():
     st.warning("You must enter a username to access any part of the site.")
 
     with st.form("username_form"):
-        username_input = st.text_input("Enter your username to continue:")
+        username_input = st.text_input("Enter your username to continue (press Submit twice):")
         submitted = st.form_submit_button("Submit")
 
     if submitted:
@@ -358,7 +358,7 @@ with tab2:
 
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
-            pw_input = st.text_input("Enter password to edit build codes", type="password")
+            pw_input = st.text_input("Enter password to edit build codes(Press submit twice)", type="password")
             pw_submit = st.form_submit_button("Submit Password")
 
         if pw_submit:
@@ -393,7 +393,7 @@ with tab3:
 
     if not st.session_state.admin_authenticated:
         with st.form("admin_password_form"):
-            admin_pw_input = st.text_input("Enter Admin Password", type="password")
+            admin_pw_input = st.text_input("Enter Admin Password (Press submit twice)", type="password")
             admin_submit = st.form_submit_button("Submit Admin Password")
 
         if admin_submit:
@@ -426,6 +426,7 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
+
 
 
 
