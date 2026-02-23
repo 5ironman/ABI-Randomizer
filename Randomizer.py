@@ -6,7 +6,6 @@ from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from filelock import FileLock
 from datetime import datetime
-import pandas as pd
 
 # ----------------------
 # CONFIG
@@ -76,6 +75,9 @@ def save_build_codes_github(codes):
                 if isinstance(code, dict):
                     if not any(c.get("code") == code["code"] for c in latest_codes[weapon] if isinstance(c, dict)):
                         latest_codes[weapon].append(code)
+                else:
+                    if code not in latest_codes[weapon]:
+                        latest_codes[weapon].append(code)
         content = json.dumps(latest_codes, indent=4)
         if file:
             repo.update_file(BUILD_CODES_FILE, "update build codes", content, sha=file.sha)
@@ -119,133 +121,53 @@ def save_user_rolls_github(rolls):
 # ----------------------
 # SESSION STATE INIT
 # ----------------------
-st.session_state.setdefault("build_codes", {})
+st.session_state.setdefault("build_codes", load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE))
 st.session_state.setdefault("weapon_filters", {})
 st.session_state.setdefault("armor_filters", {})
 st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("authenticated", False)
 st.session_state.setdefault("admin_authenticated", False)
 st.session_state.setdefault("username", "")
-st.session_state.setdefault("user_rolls", {})
+st.session_state.setdefault("user_rolls", load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
 
 # ----------------------
-# REQUIRE USERNAME
+# GLOBAL USERNAME ENFORCEMENT
 # ----------------------
 if not st.session_state.username.strip():
-    username_input = st.text_input("Enter your username to continue:")
-    if username_input.strip():
-        st.session_state.username = username_input.strip()
-    else:
-        st.warning("You must enter a username to access any part of the site.")
-        st.stop()
-
-username = st.session_state.username
-st.title(f"ABI Randomizer & Build Codes - Logged in as {username}")
+    st.warning("You must enter a username to access any part of the site.")
+    st.session_state.username = st.text_input("Enter your username to continue:")
+    st.stop()
 
 # ----------------------
-# WEAPONS DATA
+# DATA
 # ----------------------
 WEAPONS_DATA = {
-    "Assault Rifles": {
-        "HK416": "5.56x45mm", "M4A1": "5.56x45mm", "AK-102": "5.56x45mm",
-        "FAL": "7.62x51mm", "SCAR-L": "5.56x45mm", "AEK": "7.62x39mm",
-        "AK-74N": "5.45x39mm", "AKM": "7.62x39mm", "F2000": "5.56x45mm",
-        "ACE31": "7.62x39mm", "AR-57": "5.7x28mm", "AN-94": "5.45x39mm",
-        "AUG": "5.56x45mm", "MDR": "5.56x45mm", "AKS-74U": "5.45x39mm",
-        "T951": "5.8x42mm", "AK-12": "5.45x39mm", "MCX": "5.56x45mm",
-        "T191": "5.8x42mm", "TO3": "5.8x42mm", "AMB-17": "9x39mm", "SG550": "5.56x45mm",
-        "G3": "7.62x51mm", "PCC-9": "9x19mm", "ZC-807": "7.62x39mm", "RPK-16": "5.45x39mm"
-    },
-    "SMGs": {
-        "P90": "5.7x28mm", "MP5": "9x19mm", "MPX": "9x19mm",
-        "Vector .45": ".45 ACP", "Vector 9": "9x19mm", "UMP45": ".45 ACP",
-        "UZI": "9x19mm", "MAC-10": ".45 ACP",
-        "MP40": "9x19mm", "T85": "7.62x25mm", "T79": "7.62x25mm",
-        "QC61": "7.62x25mm", "MPF45": ".45 ACP", "M3A1": ".45 ACP", "PP-19": "9x19mm"
-    },
-    "Carbines": {
-        "SKS": "7.62x39mm", "M16": "5.56x45mm", "Mini14": "5.56x45mm",
-        "SVTU": "7.62x54mm", "BM59": "7.62x51mm", "M14": "7.62x51mm",
-        "SA85M": "7.62x39mm", "M96": "5.56x45mm"
-    },
-    "Marksman Rifles": {
-        "M110": "7.62x51mm", "SVDS": "7.62x54mm", "VSS": "9x39mm",
-        "MK14": "7.62x51mm", "U191": "5.8x42mm", "ML Lever-Action": ".44 Cal"
-    },
-    "Sniper Rifles": {
-        "Mosin-Nagant": "7.62x54mm", "M24": "7.62x51mm", "SJ16": ".338 Lapua"
-    },
-    "Shotguns": {
-        "S12K": "12x70mm", "M870": "12x70mm", "MP-133": "12x70mm",
-        "USAS-12": "12x70mm", "SPR310": "12x70mm", "TOZ-34": "12x70mm"
-    },
-    "Pistols": {
-        "G18C": "9x19mm", "G17": "9x19mm", "Desert Eagle": ".44 Cal",
-        "Gold Deagle": ".44 Cal", "M1911": ".45 ACP", "T54": "7.62x25mm",
-        "M9A3": "9x19mm", "F57": "5.7x28mm", "CZ52": "7.62x25mm",
-        "M45A1": ".45 ACP", "T05": "9x19mm", "MP9": "9x19mm"
-    }
+    "Assault Rifles": {"HK416": "5.56x45mm", "M4A1": "5.56x45mm", "AK-102": "5.56x45mm"},
+    "SMGs": {"P90": "5.7x28mm", "MP5": "9x19mm"},
+    "Carbines": {"SKS": "7.62x39mm", "M16": "5.56x45mm"},
+    "Marksman Rifles": {"M110": "7.62x51mm", "SVDS": "7.62x54mm"},
+    "Sniper Rifles": {"Mosin-Nagant": "7.62x54mm", "M24": "7.62x51mm"},
+    "Shotguns": {"S12K": "12x70mm", "M870": "12x70mm"},
+    "Pistols": {"G18C": "9x19mm", "G17": "9x19mm"}
 }
 
-# ----------------------
-# OTHER DATA
-# ----------------------
 ammo_data = {
-    "5.45x39mm": ["HP", "PS", "BP", "BS", "PP", "PRS"],
-    "5.56x45mm": ["HP Hunting", "FMJ Hunting", "M193", "M855", "M855A1", "M995"],
-    "5.8x42mm": ["DBP87", "DVP88", "DVC12"],
-    "7.62x39mm": ["HP", "LP", "US", "T45M", "PS", "BP", "AP"],
-    "7.62x51mm": ["UN", "BPZ", "M80", "M62", "M61"],
-    "7.62x54mm": ["LPS", "T46M", "7BT1", "SNB", "7N37"],
-    ".338 Lapua": ["UPZ", "FMJ", "AP"],
-    ".44 Cal": ["LFNP", "SJHP", "JSP"],
-    ".45 ACP": ["HS", "FMJ", "AP"],
-    "7.62x25mm": ["PT", "PST", "LRN", "AKBS", "PS"],
-    "9x19mm": ["PSO", "PST", "AP6.3", "DumDum", "7N31"],
-    "12x70mm": ["Type 5 buckshot", "Type 7 buckshot", "Type 8 buckshot",
-                "Flechette Buckshot", "Dual Shell", "Led Slug", "Grizzly Slug",
-                "RIP Slug", "GT Slug", "AP Slug"],
-    "5.7x28mm": ["SS197SR", "SS190", "R37.X", "L191", "SS198"],
-    "9x39mm": ["SP5", "SP6", "7N9", "7N12"]
+    "5.56x45mm": ["M193", "M855", "M995"],
+    "5.7x28mm": ["SS197SR", "SS190"],
+    "7.62x39mm": ["HP", "BP"],
+    "7.62x51mm": ["M80", "M62"],
+    "7.62x54mm": ["SNB", "7N37"],
+    "9x19mm": ["PSO", "PST"],
+    "12x70mm": ["Type 5 buckshot", "Type 7 buckshot"]
 }
 
-armors = {
-    "Tier 1": ["Retro Sapper Bulletproof Vest", "Retro Bulletproof Vest", "Old Security Body Armor"],
-    "Tier 2": ["Security Body Armor", "220 Body Armor", "Retro Infantry Bulletproof Vest"],
-    "Tier 3": ["KN Regulation Body Armor", "PCA350 Body Armor", "Standard SWAT Armor",
-               "H-Tac SWAT Body Armor", "KN Assault Body Armor", "H-LC Lightweight Body Armor"],
-    "Tier 4": ["SEK Fortress Body Armor", "IND401 Body Armor", "6B13 Body Armor",
-               "6B23 Body Armor", "Spartan B Body Armor"],
-    "Tier 5": ["H-LC Tactical Body Armor", "Defender M4 Heavy Body Armor (Black)",
-               "Defender M4 Heavy Body Armor (Green)", "926 Composite Body Armor",
-               "IMTV Samurai Assault Armor", "IMTV Samurai Standard Armor", "IMTV Samurai Full Protection",
-               "BT6 Heavy Body Armor"],
-    "Tier 6": ["Marshal Heavy Body Armor", "6B45 Heavy Body Armor", "BT101 Tactical Body Armor",
-               "KN Composite Body Armor"]
-}
+armors = {"Tier 1": ["Retro Sapper"], "Tier 2": ["Security Body Armor"]}
+helmets = {"Tier 1": ["Kelsey Fire Helmet"], "Tier 2": ["Retro Military Helmet"]}
+backpacks = ["Sling Bag", "Lightweight Camping Backpack"]
 
-helmets = {
-    "Tier 1": ["Kelsey Fire Helmet", "Lightweight Safety Helmet", "Motorcycle Helmet", "Tanker Protective Cap"],
-    "Tier 2": ["Retro Military Helmet", "Retro Steel Helmet", "Security Helmet", "Aviator Helmet",
-               "Security Riot Helmet", "PAS Standard Helmet"],
-    "Tier 3": ["PAS2 Helmet", "F70 Tactical Helmet", "SH12 Military Helmet", "6B4 Helmet",
-               "6B4 Helmet (Squad S)", "6B5 Helmet"],
-    "Tier 4": ["SH40 Military Helmet", "IND Tactical Helmet", "IND Tactical Helmet (Variant)", "IND200 Helmet",
-               "F80 Tactical Helmet", "SH18 Military Helmet", "KSS Tactical Helmet", "KSS2 Tactical Helmet",
-               "56K Helicopter Helmet"],
-    "Tier 5": ["SH Matzka 2 Helmet", "SH60 Military Helmet", "SH50 Military Helmet", "FA Assault Tactical Helmet",
-               "03 Heavy Tactical Helmet", "RSP Heavy Tactical Helmet", "AN95 Heavy Blast Helmet"],
-    "Tier 6": ["6BNT Helmet", "RST Special Forces Helmet", "HGB4 Offensive Helmet", "SH65 Military Helmet",
-               "IND50 Heavy Tactical Helmet", "D009 Blast Helmet", "AS200 Heavy Tactical Helmet"]
-}
-
-backpacks = [
-    "Sling Bag", "Lightweight Camping Backpack", "Medium Camping Backpack", "Simple Backpack", "Canvas Backpack",
-    "Canvas Camping Backpack", "Sports Backpack", "Cowhide Backpack", "Outdoor Travel Backpack",
-    "RUSH Tactical Backpack", "Large Camping Backpack", "XA4 Tactical Backpack", "Med Field Backpack",
-    "Chapman Military Backpack", "AMP7 Assault Backpack", "Retro Marching Backpack", "LUC Expanded Tactical Backpack",
-    "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
-]
+# Ensure all weapons have a build code list
+for cat in WEAPONS_DATA.values():
+    st.session_state.build_codes.update({w: [] for w in cat if w not in st.session_state.build_codes})
 
 # Initialize filters
 st.session_state.weapon_filters = {cat: True for cat in WEAPONS_DATA}
@@ -263,8 +185,10 @@ def generate_loadout():
         return "No weapons available."
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
-    armor_piece = f"{random.choice(armors[random.choice(list(armors.keys()))])}"
-    helmet_piece = f"{random.choice(helmets[random.choice(list(helmets.keys()))])}"
+    armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
+    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
+    armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})"
+    helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
     backpack = random.choice(backpacks)
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
@@ -275,20 +199,63 @@ def generate_loadout():
     return "\n".join(lines)
 
 # ----------------------
-# TABS
+# BUILD CODE MANAGEMENT
+# ----------------------
+def add_build_code(weapon, new_code, username):
+    new_code = new_code.strip()
+    if not new_code:
+        return
+    if not username.strip():
+        st.error("You must enter a username before adding a build code.")
+        return
+    
+    latest_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+    latest_codes.setdefault(weapon, [])
+    st.session_state.build_codes.setdefault(weapon, [])
+    
+    existing_codes = [c["code"] for c in latest_codes[weapon] if isinstance(c, dict)]
+    if new_code not in existing_codes:
+        entry = {"code": new_code, "added_by": username, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        latest_codes[weapon].append(entry)
+        st.session_state.build_codes[weapon] = latest_codes[weapon]
+        save_json_local(BUILD_CODES_FILE, LOCK_FILE, latest_codes)
+        save_build_codes_github(latest_codes)
+        st.success(f"Added '{new_code}' to {weapon} by {username}")
+    else:
+        st.warning(f"Code '{new_code}' already exists for {weapon}")
+
+# ----------------------
+# STREAMLIT UI WITH TABS
 # ----------------------
 tab1, tab2, tab3 = st.tabs(["Randomizer", "Build Codes", "Admin Panel"])
 
+# ---------------------- RANDOMIZER TAB ----------------------
 with tab1:
-    st.subheader("Generate Random Loadout")
+    st.subheader("Weapon Categories")
+    for cat in WEAPONS_DATA:
+        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+    st.subheader("Armor Tiers")
+    for tier in armors:
+        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+    st.subheader("Helmet Tiers")
+    for tier in helmets:
+        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
+
+    st.header("Generate Loadout")
     if st.button("Generate Loadout"):
         loadout = generate_loadout()
         st.code(loadout)
-        st.session_state.user_rolls.setdefault(username, []).append(loadout)
+        user = st.session_state.username
+        st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+        st.session_state.user_rolls.setdefault(user, []).append(loadout)
         save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
         save_user_rolls_github(st.session_state.user_rolls)
 
+# ---------------------- BUILD CODES TAB ----------------------
 with tab2:
+    st.subheader("Build Codes Management")
+    username = st.session_state.username
+    
     if not st.session_state.authenticated:
         pw = st.text_input("Enter password to edit build codes", type="password")
         if st.button("Submit Password"):
@@ -298,35 +265,56 @@ with tab2:
             else:
                 st.error("Incorrect password")
     else:
-        st.subheader("Add New Build Code")
-        weapon_choice = st.selectbox("Select Weapon", sorted(WEAPONS_DATA.keys()))
+        st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+        weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
         new_code = st.text_input("Enter new build code")
         if st.button("Add Code"):
-            if new_code.strip():
-                st.session_state.build_codes.setdefault(weapon_choice, [])
-                st.session_state.build_codes[weapon_choice].append({
-                    "code": new_code,
-                    "added_by": username,
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-                save_json_local(BUILD_CODES_FILE, LOCK_FILE, st.session_state.build_codes)
-                save_build_codes_github(st.session_state.build_codes)
-                st.success(f"Added {new_code} to {weapon_choice}")
+            add_build_code(weapon_choice, new_code, username)
+        
+        with st.expander("All Build Codes"):
+            for weapon, codes in sorted(st.session_state.build_codes.items()):
+                st.markdown(f"**{weapon}**")
+                if codes:
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
+                else:
+                    st.markdown("- No codes yet")
 
+# ---------------------- ADMIN PANEL TAB ----------------------
 with tab3:
     if not st.session_state.admin_authenticated:
         admin_pw = st.text_input("Enter Admin Password", type="password")
         if admin_pw == ADMIN_PASSWORD:
             st.session_state.admin_authenticated = True
             st.success("Admin access granted!")
-    else:
-        st.subheader("User Roll History")
-        for user, rolls in st.session_state.user_rolls.items():
-            st.markdown(f"**{user}** ({len(rolls)} rolls)")
-            st.dataframe(pd.DataFrame(rolls[-5:], columns=["Last 5 Rolls"]))
-        
-        st.subheader("All Weapon Build Codes")
-        for weapon, codes in st.session_state.build_codes.items():
-            st.markdown(f"**{weapon}**")
-            for c in codes:
-                st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+        elif admin_pw != "":
+            st.error("Incorrect password")
+
+    if st.session_state.admin_authenticated:
+        st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+        st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
+
+        # Show build codes
+        with st.expander("All Weapon Build Codes"):
+            for weapon, codes in sorted(st.session_state.build_codes.items()):
+                st.markdown(f"**{weapon}**")
+                if codes:
+                    for c in codes:
+                        if isinstance(c, dict):
+                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                        else:
+                            st.markdown(f"- {c}")
+                else:
+                    st.markdown("- No codes yet")
+
+        # Show user roll history
+        with st.expander("User Roll History"):
+            search_query = st.text_input("Search Users")
+            for user, rolls in st.session_state.user_rolls.items():
+                if search_query.lower() in user.lower():
+                    st.markdown(f"**{user}** ({len(rolls)} rolls)")
+                    for r in rolls[-5:]:
+                        st.markdown(f"- {r}")
