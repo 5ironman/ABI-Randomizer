@@ -1,4 +1,5 @@
-filelock
-PyGithub
-streamlit
-streamlit-autorefresh
+streamlit>=1.24.0
+PyGithub>=1.55
+filelock>=3.12.0
+pandas>=2.0.0
+matplotlib>=3.7.0
