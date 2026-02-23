@@ -549,13 +549,14 @@ def admin_panel_tab(tab):
         else:
             st.info("No build codes available.")
 
-    tab.subheader("User Last Roll Per User")
+    tab.subheader("User Roll History (Last 5 Rolls Per User)")
+    
     if st.session_state.user_rolls:
         for user, rolls in st.session_state.user_rolls.items():
-            last_roll = rolls[-1] if rolls else "No rolls yet"
-            selected_roll = tab.selectbox(f"{user} — Last Roll", options=[last_roll], key=f"last_roll_{user}")
-            if last_roll != "No rolls yet":
-                tab.code(selected_roll)
+            last_5 = list(reversed(rolls[-5:]))  # Last 5 rolls, newest first
+            selected_roll = tab.selectbox(f"{user} — Last 5 Rolls", last_5, key=f"{user}_last5")
+            if selected_roll:
+                tab.markdown(f"**Selected Roll:**\n```\n{selected_roll}\n```")
     else:
         tab.info("No users found.")
 
@@ -572,6 +573,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
