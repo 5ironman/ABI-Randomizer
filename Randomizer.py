@@ -21,7 +21,7 @@ def get_github_repo():
         st.warning("Missing GITHUB_TOKEN or REPO_NAME in Streamlit Secrets!")
         return None
     try:
-        g = Github(auth=Auth.Token(GITHUB_TOKEN))  # Use new Auth.Token() method
+        g = Github(auth=Auth.Token(GITHUB_TOKEN))  # New Auth.Token() method
         user = g.get_user()
         st.sidebar.success(f"Connected as: {user.login}")
         return g.get_repo(REPO_NAME)
@@ -90,17 +90,10 @@ if "build_codes" not in st.session_state:
         codes = load_build_codes_local()
     st.session_state.build_codes = codes
 
-# ----------------------
-# DEFAULT WEAPONS
-# ----------------------
-DEFAULT_WEAPONS = ["HK416", "M4A1"]
-for w in DEFAULT_WEAPONS:
-    if w not in st.session_state.build_codes:
-        st.session_state.build_codes[w] = []
-
-# Ensure new_code_input exists
 if "new_code_input" not in st.session_state:
-    st.session_state["new_code_input"] = ""
+    st.session_state.new_code_input = ""
+if "reset_new_code" not in st.session_state:
+    st.session_state.reset_new_code = False
 
 # ----------------------
 # FULL WEAPONS DATA
@@ -208,7 +201,7 @@ Backpacks = [
 # RANDOM LOADOUT FUNCTION
 # ----------------------
 def generate_full_abi_loadout(lockdown=False, disable_shot_pistol=False, exclude_t1_t2=False, armored_rig_chance=0.25):
-    # Flatten weapons
+    # Flatten all weapons
     all_weapons = []
     for cat, weapons in WEAPONS_DATA.items():
         if disable_shot_pistol and cat in ("Shotguns", "Pistols", "Carbines"):
@@ -240,7 +233,7 @@ def generate_full_abi_loadout(lockdown=False, disable_shot_pistol=False, exclude
     }
     ammo_display = f"{caliber} {random.choice(ammo_data.get(caliber, [caliber]))}"
 
-    # Armor / Helmet / Backpack selection
+    # Armor / Helmet / Backpack
     armor_tiers = list(armors.keys())
     helmet_tiers = list(helmets.keys())
     if lockdown:
@@ -267,7 +260,6 @@ def generate_full_abi_loadout(lockdown=False, disable_shot_pistol=False, exclude
     codes = st.session_state.build_codes.get(weapon, [])
     build_code_choice = random.choice(codes) if codes else None
 
-    # Output
     out_lines = [
         "--- ARENA BREAKOUT: INFINITE RANDOM LOADOUT ---",
         f"CLASS:    {category}",
@@ -305,7 +297,12 @@ if st.button("Generate Loadout"):
 # --- Edit Build Codes ---
 st.header("Edit Build Codes")
 weapon_choice = st.selectbox("Select Weapon", list(st.session_state.build_codes.keys()))
-new_code = st.text_input("Enter New Build Code", key="new_code_input")
+
+new_code = st.text_input(
+    "Enter New Build Code",
+    value="" if st.session_state.reset_new_code else st.session_state.get("new_code_input", ""),
+    key="new_code_input"
+)
 
 if st.button("Add Build Code"):
     if new_code and new_code not in st.session_state.build_codes[weapon_choice]:
@@ -317,8 +314,14 @@ if st.button("Add Build Code"):
                 commit_message=f"Added build code {new_code} to {weapon_choice}"
             )
         st.success(f"Added build code {new_code} to {weapon_choice}")
-        # Safe reset by rerun
-        st.experimental_rerun()
+        st.session_state.reset_new_code = True
+    else:
+        st.warning("Enter a valid and unique build code.")
+
+# Reset input safely
+if st.session_state.reset_new_code:
+    st.session_state.new_code_input = ""
+    st.session_state.reset_new_code = False
 
 st.subheader("Current Build Codes")
 st.json(st.session_state.build_codes)
