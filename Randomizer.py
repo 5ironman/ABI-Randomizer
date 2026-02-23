@@ -103,6 +103,7 @@ st.session_state.setdefault("weapon_filters", {})
 st.session_state.setdefault("armor_filters", {})
 st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("authenticated", False)  # Password authentication state
+st.session_state.setdefault("codes_to_remove", [])
 
 # ----------------------
 # WEAPONS DATA
@@ -317,22 +318,25 @@ with tab2:
     st.subheader("Remove Build Codes")
     current_codes = st.session_state.build_codes.get(weapon_choice, [])
     if current_codes:
-        selected_for_removal = st.multiselect(
+        st.session_state.codes_to_remove = st.multiselect(
             f"Select codes to remove from {weapon_choice}",
-            current_codes
+            current_codes,
+            default=st.session_state.codes_to_remove
         )
+
         if st.button("Remove Selected Codes"):
-            if selected_for_removal:
-                for code in selected_for_removal:
+            if st.session_state.codes_to_remove:
+                for code in st.session_state.codes_to_remove:
                     if code in st.session_state.build_codes[weapon_choice]:
                         st.session_state.build_codes[weapon_choice].remove(code)
                 save_build_codes_local(st.session_state.build_codes)
                 save_build_codes_github(st.session_state.build_codes)
                 st.success(f"Removed selected codes from {weapon_choice}")
+                st.session_state.codes_to_remove = []  # Clear selection
     else:
         st.info(f"No build codes for {weapon_choice}")
 
-    # DEBUG: Show current session codes
+    # DEBUG: Show Current Codes
     st.subheader("DEBUG: Session State Codes")
     st.write(st.session_state.build_codes.get(weapon_choice, []))
 
