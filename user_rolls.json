@@ -30,6 +30,8 @@
         "Weapon: MPX\n  Ammo: PST\nArmor (Tier 4): Spartan B Body Armor\nHelmet (Tier 2): Security Riot Helmet\nBackpack: Canvas Backpack\nMap: Airport",
         "Weapon: AK-12\n  Ammo: PRS\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 6): RST Special Forces Helmet\nBackpack: Medium Camping Backpack\nMap: Northridge",
         "Weapon: Mosin-Nagant\n  Ammo: T46M\nArmor (Tier 5): 926 Composite Body Armor\nHelmet (Tier 6): HGB4 Offensive Helmet\nBackpack: Cowhide Backpack\nMap: Farm",
-        "Weapon: F2000\n  Ammo: M995\nArmor (Tier 2): Security Body Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: RAL Heavy Military Backpack\nMap: Armory"
+        "Weapon: F2000\n  Ammo: M995\nArmor (Tier 2): Security Body Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: RAL Heavy Military Backpack\nMap: Armory",
+        "Weapon: AKM\n  Ammo: T45M\nArmor (Tier 2): Security Body Armor\nHelmet (Tier 4): F80 Tactical Helmet\nBackpack: RUSH Tactical Backpack\nMap: Armory",
+        "Weapon: SVDS\n  Ammo: 7BT1\nArmor (Tier 2): 220 Body Armor\nHelmet (Tier 1): Lightweight Safety Helmet\nBackpack: Medium Camping Backpack\nMap: Armory"
     ]
 }
