@@ -566,7 +566,7 @@ def admin_panel_tab(tab):
             last_5 = list(reversed(user_rolls[-5:]))  # Last 5 rolls
             tab.markdown(f"**Last 5 Rolls for {selected_user}:**")
             for i, roll in enumerate(last_5, 1):
-                tab.markdown(f"{i}. ```\n{roll}\n```")
+                tab.code(roll, language=None)  # <-- Use st.code instead of markdown with backticks
         else:
             tab.info(f"{selected_user} has no rolls yet.")
     else:
@@ -585,6 +585,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
