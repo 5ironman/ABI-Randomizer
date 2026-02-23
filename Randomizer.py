@@ -68,7 +68,7 @@ def save_build_codes_github(codes):
             file = None
             latest_codes = {}
 
-        # Merge codes to avoid overwriting other users
+        # Merge new codes to avoid overwriting other users
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
@@ -204,7 +204,6 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-
 # ----------------------
 # ENSURE BUILD CODE KEYS
 # ----------------------
@@ -298,21 +297,12 @@ weapon_choice = st.selectbox(
 )
 new_code = st.text_input("New Build Code", key="new_code_input")
 
-# Initialize checkbox tracking
-if "code_checked" not in st.session_state:
-    st.session_state.code_checked = {}
-for weapon, codes in st.session_state.build_codes.items():
-    st.session_state.code_checked.setdefault(weapon, {})
-    for code in codes:
-        st.session_state.code_checked[weapon].setdefault(code, True)
-
 # Add code safely
 def add_code():
     code = st.session_state.new_code_input.strip()
     weapon = weapon_choice
     if code and code not in st.session_state.build_codes[weapon]:
         st.session_state.build_codes[weapon].append(code)
-        st.session_state.code_checked.setdefault(weapon, {})[code] = True
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
         st.success(f"Added '{code}'")
@@ -321,7 +311,7 @@ def add_code():
 st.button("Add Code", on_click=add_code)
 
 # ----------------------
-# REMOVE BUILD CODES SAFELY
+# REMOVE BUILD CODES LIVE
 # ----------------------
 st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in sorted(st.session_state.build_codes.items()):
@@ -329,26 +319,23 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
     st.markdown(f"**{weapon}**")
     remove_list = []
     for code in codes:
-        checked = st.checkbox(
-            code,
-            value=st.session_state.code_checked[weapon][code],
-            key=f"{weapon}_code_{code}"
-        )
-        st.session_state.code_checked[weapon][code] = checked
+        # Dynamic checkboxes: no session_state for checked
+        checked = st.checkbox(code, value=True, key=f"{weapon}_code_{code}")
         if not checked:
             remove_list.append(code)
+
     if remove_list:
-        # Merge latest codes before removing
+        # Load latest codes before removing to merge safely
         latest_codes = load_build_codes_github() if repo else load_build_codes_local()
         for code in remove_list:
             if code in latest_codes.get(weapon, []):
                 latest_codes[weapon].remove(code)
             if code in st.session_state.build_codes.get(weapon, []):
                 st.session_state.build_codes[weapon].remove(code)
-            if code in st.session_state.code_checked.get(weapon, {}):
-                del st.session_state.code_checked[weapon][code]
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
-        st.success(f"Removed {len(remove_list)} code(s) from {weapon}")
+        st.experimental_rerun()  # Force UI refresh so removed codes disappear
+
+
 
 
