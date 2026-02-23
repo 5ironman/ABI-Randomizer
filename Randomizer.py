@@ -99,8 +99,8 @@ def save_build_codes_github(codes):
 if "build_codes" not in st.session_state:
     st.session_state.build_codes = load_build_codes_github() if repo else load_build_codes_local()
 
-if "needs_rerun" not in st.session_state:
-    st.session_state.needs_rerun = False
+if "needs_rerender" not in st.session_state:
+    st.session_state.needs_rerender = False
 
 # ----------------------
 # WEAPONS DATA
@@ -207,6 +207,7 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
+
 # ----------------------
 # ENSURE BUILD CODE KEYS
 # ----------------------
@@ -310,11 +311,12 @@ def add_code():
         save_build_codes_github(st.session_state.build_codes)
         st.success(f"Added '{code}'")
         st.session_state.new_code_input = ""
+        st.session_state.needs_rerender = True
 
 st.button("Add Code", on_click=add_code)
 
 # ----------------------
-# REMOVE BUILD CODES LIVE
+# REMOVE BUILD CODES
 # ----------------------
 st.subheader("Existing Build Codes (uncheck to remove)")
 
@@ -338,12 +340,18 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.session_state.build_codes[weapon].remove(code)
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
-        st.session_state.needs_rerun = True
+        st.session_state.needs_rerender = True
 
-# Trigger rerun **after all checkboxes processed**
-if st.session_state.needs_rerun:
-    st.session_state.needs_rerun = False
-    st.experimental_rerun()
+# ----------------------
+# FORCE UI UPDATE (modern Streamlit)
+# ----------------------
+if st.session_state.needs_rerender:
+    st.session_state.needs_rerender = False
+    # Changing a dummy session key forces the UI to rerender
+    st.session_state["__rerender"] = random.random()
+
+
+
 
 
 
