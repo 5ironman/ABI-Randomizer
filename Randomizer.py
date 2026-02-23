@@ -196,7 +196,7 @@ if not st.session_state.user_authenticated:
     with login_tab:
         login_user = st.text_input("Username", key="login_user")
         login_pw = st.text_input("Password", type="password", key="login_pw")
-        if st.button("Login"):
+        if st.button("Login (Press Twice)"):
             if login_user in accounts and bcrypt.checkpw(login_pw.encode(), accounts[login_user].encode()):
                 st.session_state.username = login_user
                 st.session_state.user_authenticated = True
@@ -461,6 +461,7 @@ if st.session_state.user_authenticated:
         with tabs[2]:
             st.header("Admin Panel")
             st.text("Admin controls go here (optional)...")
+
 
 
 
