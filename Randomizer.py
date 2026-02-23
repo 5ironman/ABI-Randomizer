@@ -557,11 +557,18 @@ def admin_panel_tab(tab):
     # ----------------------
     # User Rolls Last 5 Dropdown
     # ----------------------
-    tab.subheader("User Roll History (Last 5 Rolls Per User)")
-    if st.session_state.user_rolls:
-        for user, rolls in st.session_state.user_rolls.items():
-            last_5 = list(reversed(rolls[-5:]))  # get last 5 rolls
-            tab.selectbox(f"{user}'s Last 5 Rolls", last_5, key=f"user_rolls_dropdown_{user}")
+    tab.subheader("User Roll History (Select a User)")
+    all_users = list(st.session_state.user_rolls.keys())
+    if all_users:
+        selected_user = tab.selectbox("Select User", all_users, key="admin_select_user")
+        user_rolls = st.session_state.user_rolls.get(selected_user, [])
+        if user_rolls:
+            last_5 = list(reversed(user_rolls[-5:]))  # Last 5 rolls
+            tab.markdown(f"**Last 5 Rolls for {selected_user}:**")
+            for i, roll in enumerate(last_5, 1):
+                tab.markdown(f"{i}. ```\n{roll}\n```")
+        else:
+            tab.info(f"{selected_user} has no rolls yet.")
     else:
         tab.info("No users found.")
 
@@ -578,6 +585,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
