@@ -294,14 +294,13 @@ def add_build_code(weapon, new_code):
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# --- Cookie-like username ---
-if not st.session_state.username:
-    if "username" in st.experimental_get_query_params():
-        st.session_state.username = st.experimental_get_query_params()["username"][0]
+# --- Username (cookie-like) ---
+if "username" in st.query_params:
+    st.session_state.username = st.query_params["username"][0]
 
 st.session_state.username = st.text_input("Username", value=st.session_state.username)
 if st.session_state.username.strip():
-    st.experimental_set_query_params(username=st.session_state.username)
+    st.query_params = {"username": st.session_state.username}
 
 # --- Tabs ---
 tabs = ["Randomizer","Build Codes","Admin Panel"]
