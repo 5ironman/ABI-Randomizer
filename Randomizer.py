@@ -216,7 +216,7 @@ if not st.session_state.user_authenticated:
     with register_tab:
         reg_user = st.text_input("Choose Username", key="reg_user")
         reg_pw = st.text_input("Choose Password", type="password", key="reg_pw")
-        if st.button("Register"):
+        if st.button("Register (Press Twice to Login)"):
             if not reg_user or not reg_pw:
                 st.error("Cannot leave username/password empty.")
             elif reg_user in accounts:
@@ -579,6 +579,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
