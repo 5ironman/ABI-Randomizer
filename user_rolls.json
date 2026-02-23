@@ -28,6 +28,7 @@
         "**MK14**\n  Ammo: M62\nArmor (Tier 1): Retro Sapper Bulletproof Vest\nHelmet (Tier 6): SH65 Military Helmet\nBackpack: Canvas Camping Backpack\nMap: Northridge",
         "**TOZ-34**\n  Ammo: Type 8 buckshot\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 6): 6BNT Helmet\nBackpack: Medium Camping Backpack\nMap: Northridge",
         "Weapon: MPX\n  Ammo: PST\nArmor (Tier 4): Spartan B Body Armor\nHelmet (Tier 2): Security Riot Helmet\nBackpack: Canvas Backpack\nMap: Airport",
-        "Weapon: AK-12\n  Ammo: PRS\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 6): RST Special Forces Helmet\nBackpack: Medium Camping Backpack\nMap: Northridge"
+        "Weapon: AK-12\n  Ammo: PRS\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 6): RST Special Forces Helmet\nBackpack: Medium Camping Backpack\nMap: Northridge",
+        "Weapon: Mosin-Nagant\n  Ammo: T46M\nArmor (Tier 5): 926 Composite Body Armor\nHelmet (Tier 6): HGB4 Offensive Helmet\nBackpack: Cowhide Backpack\nMap: Farm"
     ]
 }
