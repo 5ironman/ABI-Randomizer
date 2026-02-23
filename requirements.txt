@@ -1,3 +1,4 @@
 filelock
 PyGithub
 streamlit
+streamlit-autorefresh
