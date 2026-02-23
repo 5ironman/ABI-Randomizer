@@ -2,15 +2,16 @@
     "HK416": [],
     "M4A1": [],
     "AK-102": [],
-    "FAL": [],
+    "FAL": [
+        "Mod Gun-3feloM28962SxP4A4"
+    ],
     "SCAR-L": [],
     "AEK": [],
     "AK-74N": [
         "Mod Gun-3feloM28962SxP4o4"
     ],
     "AKM": [
-        "Mod Gun-3fEXBRvV9f4jiP4P4",
-        "Mod Gun-3fEXBRvV9f4jiP4o4"
+        "Mod Gun-3feloM28962SxP4O4"
     ],
     "F2000": [],
     "ACE31": [],
@@ -31,9 +32,13 @@
     "AMB-17": [],
     "SG550": [],
     "G3": [],
-    "PCC-9": [],
+    "PCC-9": [
+        "Mod Gun-3fdicMQRPJChzP4z4"
+    ],
     "ZC-807": [],
-    "RPK-16": [],
+    "RPK-16": [
+        "Mod Gun-3feloM28962SxP4q4"
+    ],
     "P90": [],
     "MP5": [],
     "MPX": [],
