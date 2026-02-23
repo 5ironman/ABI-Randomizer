@@ -495,7 +495,7 @@ def build_codes_tab(tab):
         add_build_code(weapon_choice, new_code, username)
 
     # --- Show codes for selected weapon only ---
-    tab.subheader("All Build Codes (Dropdown)")
+    tab.subheader("All Build Codes")
     
     # Flatten all codes with weapon names
     all_codes_with_weapon = []
@@ -577,6 +577,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
