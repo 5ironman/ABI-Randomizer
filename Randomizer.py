@@ -499,17 +499,15 @@ def build_codes_tab(tab):
     # --- Show codes for selected weapon only ---
     tab.subheader("All Build Codes (Dropdown)")
     
-    # Flatten all codes across all weapons
-    all_codes = []
-    for codes in st.session_state.build_codes.values():
+    # Flatten all codes with weapon names
+    all_codes_with_weapon = []
+    for weapon, codes in st.session_state.build_codes.items():
         for c in codes:
-            if isinstance(c, dict):
-                all_codes.append(c["code"])
-            else:
-                all_codes.append(c)
+            code_str = c["code"] if isinstance(c, dict) else c
+            all_codes_with_weapon.append(f"{weapon}: {code_str}")
     
-    if all_codes:
-        selected_code = tab.selectbox("Select a build code", all_codes, key="all_codes_dropdown")
+    if all_codes_with_weapon:
+        selected_code = tab.selectbox("Select a build code", all_codes_with_weapon, key="all_codes_dropdown")
         if selected_code:
             tab.markdown(f"**Selected Build Code:**\n```\n{selected_code}\n```")
     else:
@@ -581,6 +579,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
