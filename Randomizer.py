@@ -296,10 +296,7 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# --- Remove code handling ---
-if "remove_code" not in st.session_state:
-    st.session_state.remove_code = None
-
+# --- Remove code UI ---
 st.subheader("Existing Build Codes")
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
@@ -310,15 +307,8 @@ for weapon, codes in st.session_state.build_codes.items():
         cols[0].text(code)
         remove_key = f"remove_{weapon}_{code}"
         if cols[1].button("Remove", key=remove_key):
-            st.session_state.remove_code = (weapon, code)
-
-# --- Process removal immediately ---
-if st.session_state.remove_code:
-    weapon, code_to_remove = st.session_state.remove_code
-    if code_to_remove in st.session_state.build_codes[weapon]:
-        st.session_state.build_codes[weapon].remove(code_to_remove)
-        save_build_codes_local(st.session_state.build_codes)
-        save_build_codes_github(st.session_state.build_codes)
-        st.success(f"Removed code '{code_to_remove}' for {weapon}")
-    st.session_state.remove_code = None
-    st.experimental_rerun()
+            st.session_state.build_codes[weapon].remove(code)
+            save_build_codes_local(st.session_state.build_codes)
+            save_build_codes_github(st.session_state.build_codes)
+            st.success(f"Removed code '{code}' for {weapon}")
+            break  # Break to prevent iterating over modified list
