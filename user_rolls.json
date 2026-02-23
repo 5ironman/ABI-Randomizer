@@ -4,6 +4,7 @@
         "Weapon: Mosin-Nagant\n  Ammo: 7BT1\nArmor (Tier 5): Defender M4 Heavy Body Armor (Black)\nHelmet (Tier 1): Tanker Protective Cap\nBackpack: LUC Expanded Tactical Backpack\nMap: Valley",
         "Weapon: AKM\n  Ammo: PS\nArmor (Tier 4): Spartan B Body Armor\nHelmet (Tier 6): HGB4 Offensive Helmet\nBackpack: Sling Bag\nMap: Farm",
         "Weapon: CZ52\n  Ammo: LRN\nArmor (Tier 3): Standard SWAT Armor\nHelmet (Tier 4): IND Tactical Helmet\nBackpack: Lightweight Camping Backpack\nMap: Armory",
-        "Weapon: M45A1\n  Ammo: AP\nArmor (Tier 3): Standard SWAT Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: Large Camping Backpack\nMap: Northridge"
+        "Weapon: M45A1\n  Ammo: AP\nArmor (Tier 3): Standard SWAT Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: Large Camping Backpack\nMap: Northridge",
+        "Weapon: Desert Eagle\n  Ammo: SJHP\nArmor (Tier 3): H-Tac SWAT Body Armor\nHelmet (Tier 4): IND Tactical Helmet\nBackpack: RAL Heavy Military Backpack\nMap: TV Station"
     ]
 }
