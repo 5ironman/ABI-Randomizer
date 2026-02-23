@@ -21,6 +21,7 @@
         "**HK416**\n  Ammo: M855\nArmor (Tier 3): PCA350 Body Armor\nHelmet (Tier 6): SH65 Military Helmet\nBackpack: Field Camping Backpack\nMap: TV Station",
         "**SJ16**\n  Ammo: FMJ\nArmor (Tier 2): 220 Body Armor\nHelmet (Tier 2): Aviator Helmet\nBackpack: Retro Marching Backpack\nMap: Northridge",
         "**UZI**\n  Ammo: PST\nArmor (Tier 5): IMTV Samurai Assault Armor\nHelmet (Tier 6): IND50 Heavy Tactical Helmet\nBackpack: Outdoor Travel Backpack\nMap: TV Station",
-        "**TO3**\n  Ammo: DBP87\nArmor (Tier 1): Retro Sapper Bulletproof Vest\nHelmet (Tier 5): SH60 Military Helmet\nBackpack: Retro Marching Backpack\nMap: TV Station"
+        "**TO3**\n  Ammo: DBP87\nArmor (Tier 1): Retro Sapper Bulletproof Vest\nHelmet (Tier 5): SH60 Military Helmet\nBackpack: Retro Marching Backpack\nMap: TV Station",
+        "**ML Lever-Action**\n  Ammo: SJHP\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 6): SH65 Military Helmet\nBackpack: Simple Backpack\nMap: Airport"
     ]
 }
