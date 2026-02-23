@@ -16,5 +16,8 @@
         "MAP: Airport\nCLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm PT\nARMOR: BT101 Tactical Body Armor (Tier 6)\nHELMET: Tanker Protective Cap (Tier 1)\nBACKPACK: Outdoor Travel Backpack",
         "MAP: Airport\nCLASS: SMGs\nWEAPON: T85\nAMMO: 7.62x25mm AKBS\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Kelsey Fire Helmet (Tier 1)\nBACKPACK: RUSH Tactical Backpack",
         "MAP: Airport\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP HS\nARMOR: Retro Sapper Bulletproof Vest (Tier 1)\nHELMET: Tanker Protective Cap (Tier 1)\nBACKPACK: Canvas Camping Backpack"
+    ],
+    "5ironman2": [
+        "MAP: Valley\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm DumDum\nARMOR: Defender M4 Heavy Body Armor (Black) (Tier 2)\nHELMET: AN95 Heavy Blast Helmet (Tier 3)\nBACKPACK: Outdoor Travel Backpack"
     ]
 }
