@@ -255,6 +255,7 @@ backpacks = [
     "Chapman Military Backpack", "AMP7 Assault Backpack", "Retro Marching Backpack", "LUC Expanded Tactical Backpack",
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
+MAPS = ["Armory", "Farm", "Valley", "Airport", "Northridge", "TV Station"]
 
 # Ensure all weapons have a build code list
 for cat in WEAPONS_DATA.values():
@@ -269,6 +270,10 @@ st.session_state.helmet_filters = {tier: True for tier in helmets}
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
+    # Randomly choose map
+    map_choice = random.choice(MAPS)
+    
+    # Weapons
     weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
                if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
@@ -277,9 +282,9 @@ def generate_loadout():
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
 
+    # Armor and helmet tiers
     armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
     helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
-
     if not armor_tiers:
         armor_tiers = list(armors.keys())
     if not helmet_tiers:
@@ -289,13 +294,16 @@ def generate_loadout():
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
     backpack = random.choice(backpacks)
 
+    # Build codes
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
 
-    lines = [f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
+    # Compose lines
+    lines = [f"MAP: {map_choice}", f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
     if code:
         lines.append(f"BUILD CODE: {code}")
     lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
+
     return "\n".join(lines)
 
 # ----------------------
@@ -433,6 +441,7 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
+
 
 
 
