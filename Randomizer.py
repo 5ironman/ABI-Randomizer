@@ -448,7 +448,26 @@ if "Admin Panel" in tabs_list:
                 st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
             users = list(st.session_state.user_rolls.keys())
+            st.subheader("Build Codes Database")
 
+rows = []
+
+for weapon, codes in st.session_state.build_codes.items():
+    for entry in codes:
+        if isinstance(entry, dict):
+            rows.append({
+                "Weapon": weapon,
+                "Code": entry.get("code"),
+                "Added By": entry.get("added_by"),
+                "Timestamp": entry.get("timestamp")
+            })
+
+if rows:
+    st.dataframe(rows, use_container_width=True)
+else:
+    st.info("No build codes available.")
+
+            
             # ---------------- USERS ----------------
             st.subheader("All Users")
 
@@ -515,4 +534,5 @@ if "Admin Panel" in tabs_list:
 
                     else:
                         st.warning("Please confirm deletion first.")
+
 
