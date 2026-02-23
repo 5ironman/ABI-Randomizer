@@ -282,7 +282,7 @@ if st.button("Generate Loadout"):
 st.header("Build Codes")
 
 weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()))
-new_code = st.text_input("New Build Code")
+new_code = st.text_input("New Build Code (Might have to press add twice)")
 
 def add_code():
     code = new_code.strip()
@@ -302,7 +302,7 @@ if "code_checked" not in st.session_state:
         for weapon, codes in st.session_state.build_codes.items()
     }
 
-st.subheader("Existing Build Codes (uncheck to remove)")
+st.subheader("Existing Build Codes (uncheck to remove wait for confirmation and then recheck to fully remove)")
 
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
@@ -323,3 +323,4 @@ for weapon, codes in st.session_state.build_codes.items():
             save_build_codes_local(st.session_state.build_codes)
             save_build_codes_github(st.session_state.build_codes)
             st.success(f"Build code '{code}' removed")
+
