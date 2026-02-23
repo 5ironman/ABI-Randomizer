@@ -9,6 +9,7 @@
         "MAP: Armory\nCLASS: Assault Rifles\nWEAPON: AN-94\nAMMO: 5.45x39mm PP\nARMOR: IMTV Samurai Full Protection (Tier 6)\nHELMET: SH18 Military Helmet (Tier 2)\nBACKPACK: Field Camping Backpack",
         "No weapons available. Please enable at least one category.",
         "MAP: Armory\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm 7N31\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: Tanker Protective Cap (Tier 5)\nBACKPACK: Chapman Military Backpack",
-        "MAP: Armory\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP AP\nARMOR: Retro Sapper Bulletproof Vest (Tier 6)\nHELMET: Motorcycle Helmet (Tier 1)\nBACKPACK: Medium Camping Backpack"
+        "MAP: Armory\nCLASS: SMGs\nWEAPON: UMP45\nAMMO: .45 ACP AP\nARMOR: Retro Sapper Bulletproof Vest (Tier 6)\nHELMET: Motorcycle Helmet (Tier 1)\nBACKPACK: Medium Camping Backpack",
+        "MAP: Airport\nCLASS: SMGs\nWEAPON: Vector .45\nAMMO: .45 ACP FMJ\nARMOR: IMTV Samurai Standard Armor (Tier 5)\nHELMET: Kelsey Fire Helmet (Tier 1)\nBACKPACK: Medium Camping Backpack"
     ]
 }
