@@ -2,6 +2,7 @@
     "5ironman": [
         "MAP: Armory\nCLASS: Assault Rifles\nWEAPON: MCX\nAMMO: 5.56x45mm M855A1\nARMOR: H-LC Lightweight Body Armor (Tier 5)\nHELMET: IND Tactical Helmet (Variant) (Tier 5)\nBACKPACK: Canvas Backpack",
         "MAP: TV Station\nCLASS: Pistols\nWEAPON: G18C\nAMMO: 9x19mm DumDum\nARMOR: BT6 Heavy Body Armor (Tier 5)\nHELMET: 6B5 Helmet (Tier 2)\nBACKPACK: Sports Backpack",
-        "MAP: TV Station\nCLASS: Carbines\nWEAPON: Mini14\nAMMO: 5.56x45mm M193\nARMOR: 6B23 Body Armor (Tier 4)\nHELMET: 6BNT Helmet (Tier 4)\nBACKPACK: Med Field Backpack"
+        "MAP: TV Station\nCLASS: Carbines\nWEAPON: Mini14\nAMMO: 5.56x45mm M193\nARMOR: 6B23 Body Armor (Tier 4)\nHELMET: 6BNT Helmet (Tier 4)\nBACKPACK: Med Field Backpack",
+        "MAP: TV Station\nCLASS: Pistols\nWEAPON: Gold Deagle\nAMMO: .44 Cal JSP\nARMOR: 6B13 Body Armor (Tier 6)\nHELMET: PAS Standard Helmet (Tier 5)\nBACKPACK: 926 Field Backpack"
     ]
 }
