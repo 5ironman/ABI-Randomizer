@@ -15,12 +15,24 @@ REPO_NAME = "5ironman/ABI-Randomizer"  # <-- replace with your repo
 # GITHUB SETUP
 # ----------------------
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", None)
-if GITHUB_TOKEN:
-    g = Github(GITHUB_TOKEN)
-    repo = g.get_repo(REPO_NAME)
-else:
-    repo = None
+REPO_NAME = st.secrets.get("REPO_NAME", "yourusername/yourrepo")
 
+def get_github_repo():
+    if not GITHUB_TOKEN:
+        st.error("Missing GITHUB_TOKEN in Streamlit Secrets!")
+        return None
+    
+    try:
+        g = Github(GITHUB_TOKEN)
+        # Verify the token works by getting the authenticated user
+        user = g.get_user()
+        st.sidebar.success(f"Connected as: {user.login}")
+        return g.get_repo(REPO_NAME)
+    except Exception as e:
+        st.error(f"GitHub Auth Error: {e}")
+        return None
+
+repo = get_github_repo()
 # ----------------------
 # SAVE & LOAD FUNCTIONS
 # ----------------------
@@ -299,4 +311,5 @@ if st.button("Add Build Code"):
 
 st.subheader("Current Build Codes")
 st.json(st.session_state.build_codes)
+
 
