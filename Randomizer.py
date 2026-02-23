@@ -356,9 +356,10 @@ with tab2:
     st.subheader("Build Codes Management")
     username = st.session_state.username
 
+    # Password form
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
-            pw_input = st.text_input("Enter password to edit build codes(Press submit twice)", type="password")
+            pw_input = st.text_input("Enter password to edit build codes", type="password")
             pw_submit = st.form_submit_button("Submit Password")
 
         if pw_submit:
@@ -368,6 +369,7 @@ with tab2:
             else:
                 st.error("Incorrect password")
 
+    # Authenticated UI
     if st.session_state.authenticated:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
@@ -375,13 +377,14 @@ with tab2:
         if st.button("Add Code"):
             add_build_code(weapon_choice, new_code, username)
 
+        # Show only codes (no added_by or timestamp)
         with st.expander("All Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
                 if codes:
                     for c in codes:
                         if isinstance(c, dict):
-                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                            st.markdown(f"- {c['code']}")
                         else:
                             st.markdown(f"- {c}")
                 else:
@@ -391,9 +394,10 @@ with tab2:
 with tab3:
     st.subheader("Admin Panel")
 
+    # Password form
     if not st.session_state.admin_authenticated:
         with st.form("admin_password_form"):
-            admin_pw_input = st.text_input("Enter Admin Password (Press submit twice)", type="password")
+            admin_pw_input = st.text_input("Enter Admin Password", type="password")
             admin_submit = st.form_submit_button("Submit Admin Password")
 
         if admin_submit:
@@ -403,10 +407,12 @@ with tab3:
             else:
                 st.error("Incorrect password")
 
+    # Admin UI
     if st.session_state.admin_authenticated:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
+        # Full build codes with added_by and timestamp
         with st.expander("All Weapon Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
@@ -419,6 +425,7 @@ with tab3:
                 else:
                     st.markdown("- No codes yet")
 
+        # User roll history
         with st.expander("User Roll History"):
             search_query = st.text_input("Search Users")
             for user, rolls in st.session_state.user_rolls.items():
@@ -426,6 +433,7 @@ with tab3:
                     st.markdown(f"**{user}** ({len(rolls)} rolls)")
                     for r in rolls[-5:]:
                         st.markdown(f"- {r}")
+
 
 
 
