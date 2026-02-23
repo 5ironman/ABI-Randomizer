@@ -39,6 +39,7 @@
         "Weapon: SKS\n  Ammo: T45M\nArmor (Tier 6): Marshal Heavy Body Armor\nHelmet (Tier 5): FA Assault Tactical Helmet\nBackpack: AMP7 Assault Backpack\nMap: Airport",
         "Weapon: MPX\n  Ammo: DumDum\nArmor (Tier 4): 6B23 Body Armor\nHelmet (Tier 6): HGB4 Offensive Helmet\nBackpack: AMP7 Assault Backpack\nMap: Airport",
         "Weapon: AN-94\n  Ammo: PS\nArmor (Tier 2): Retro Infantry Bulletproof Vest\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: Cowhide Backpack\nMap: Valley",
-        "Weapon: T54\n  Ammo: PS\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: Chapman Military Backpack\nMap: TV Station"
+        "Weapon: T54\n  Ammo: PS\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: Chapman Military Backpack\nMap: TV Station",
+        "Weapon: TO3\n  Ammo: DVC12\nArmor (Tier 3): H-LC Lightweight Body Armor\nHelmet (Tier 1): Tanker Protective Cap\nBackpack: AMP7 Assault Backpack\nMap: Airport"
     ]
 }
