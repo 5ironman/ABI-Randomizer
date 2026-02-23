@@ -520,7 +520,8 @@ def build_codes_tab(tab):
 
     # --- Small footer info ---
     tab.markdown(
-        "<sub>DM me to remove a build code. If you get a yellow error when adding a build, press the button again.</sub>",
+        "<sub>[DM me](https://discord.com/users/650717003270848533) to remove a build code. "
+        "If you get a yellow error when adding a build, press the button again.</sub>",
         unsafe_allow_html=True
     )
 
@@ -598,6 +599,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
