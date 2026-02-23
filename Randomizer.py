@@ -265,7 +265,6 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 MAPS = ["Armory", "Farm", "Valley", "Airport", "Northridge", "TV Station"]
-
 # Ensure all weapons have a build code list
 for cat in WEAPONS_DATA.values():
     st.session_state.build_codes.update({w: [] for w in cat if w not in st.session_state.build_codes})
@@ -339,23 +338,32 @@ tabs_list = ["Randomizer", "Build Codes"]
 if st.session_state.username.lower() == "5ironman":
     tabs_list.append("Admin Panel")
 tabs = st.tabs(tabs_list)
-tab1 = tabs[0]
-tab2 = tabs[1]
-tab3 = tabs[2] if len(tabs) > 2 else None
 
 # ---------------------- RANDOMIZER TAB ----------------------
-with tab1:
+with tabs[0]:
     st.subheader("Weapon Categories")
-    for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+    col1w, col2w = st.columns(2)
+    for i, cat in enumerate(sorted(WEAPONS_DATA.keys())):
+        if i % 2 == 0:
+            col1w.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+        else:
+            col2w.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
 
     st.subheader("Armor Tiers")
-    for tier in sorted(armors.keys()):
-        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+    col1a, col2a = st.columns(2)
+    for i, tier in enumerate(sorted(armors.keys())):
+        if i % 2 == 0:
+            col1a.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+        else:
+            col2a.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
 
     st.subheader("Helmet Tiers")
-    for tier in sorted(helmets.keys()):
-        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
+    col1h, col2h = st.columns(2)
+    for i, tier in enumerate(sorted(helmets.keys())):
+        if i % 2 == 0:
+            col1h.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
+        else:
+            col2h.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
 
     st.header("Generate Loadout")
     if st.button("Generate Loadout"):
@@ -368,14 +376,14 @@ with tab1:
         save_user_rolls_github(st.session_state.user_rolls)
 
 # ---------------------- BUILD CODES TAB ----------------------
-with tab2:
+with tabs[1]:
     st.subheader("Build Codes Management")
     username = st.session_state.username
 
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
             pw_input = st.text_input("Enter password to edit build codes (Press Submit Twice)", type="password")
-            pw_submit = st.form_submit_button("Submit Password")
+            pw_submit = st.form_submit_button("Submit")
         if pw_submit:
             if pw_input == BUILD_CODES_PASSWORD:
                 st.session_state.authenticated = True
@@ -403,43 +411,42 @@ with tab2:
                     st.markdown("- No codes yet")
 
 # ---------------------- ADMIN PANEL TAB ----------------------
-if tab3 and st.session_state.username.lower() == "5ironman":
-    st.subheader("Admin Panel")
-
-    if not st.session_state.admin_authenticated:
-        with st.form("admin_password_form"):
-            admin_pw_input = st.text_input("Enter Admin Password", type="password")
-            admin_submit = st.form_submit_button("Submit Admin Password")
-        if admin_submit:
-            if admin_pw_input == ADMIN_PASSWORD:
-                st.session_state.admin_authenticated = True
-                st.success("Admin access granted!")
-            else:
-                st.error("Incorrect password")
-
-    if st.session_state.admin_authenticated:
-        st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
-        st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
-
-        with st.expander("All Weapon Build Codes"):
-            for weapon, codes in sorted(st.session_state.build_codes.items()):
-                st.markdown(f"**{weapon}**")
-                if codes:
-                    for c in codes:
-                        if isinstance(c, dict):
-                            st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
-                        else:
-                            st.markdown(f"- {c}")
+if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
+    with tabs[2]:
+        st.subheader("Admin Panel")
+        if not st.session_state.admin_authenticated:
+            with st.form("admin_password_form"):
+                admin_pw_input = st.text_input("Enter Admin Password", type="password")
+                admin_submit = st.form_submit_button("Submit Admin Password")
+            if admin_submit:
+                if admin_pw_input == ADMIN_PASSWORD:
+                    st.session_state.admin_authenticated = True
+                    st.success("Admin access granted!")
                 else:
-                    st.markdown("- No codes yet")
+                    st.error("Incorrect password")
 
-        with st.expander("User Roll History"):
-            search_query = st.text_input("Search Users")
-            for user, rolls in st.session_state.user_rolls.items():
-                if search_query.lower() in user.lower():
-                    st.markdown(f"**{user}** ({len(rolls)} rolls)")
-                    for r in rolls[-5:]:
-                        st.markdown(f"- {r}")
+        if st.session_state.admin_authenticated:
+            st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
+            st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
+            with st.expander("All Weapon Build Codes"):
+                for weapon, codes in sorted(st.session_state.build_codes.items()):
+                    st.markdown(f"**{weapon}**")
+                    if codes:
+                        for c in codes:
+                            if isinstance(c, dict):
+                                st.markdown(f"- {c['code']} (added by {c['added_by']} on {c['timestamp']})")
+                            else:
+                                st.markdown(f"- {c}")
+                    else:
+                        st.markdown("- No codes yet")
+
+            with st.expander("User Roll History"):
+                search_query = st.text_input("Search Users")
+                for user, rolls in st.session_state.user_rolls.items():
+                    if search_query.lower() in user.lower():
+                        st.markdown(f"**{user}** ({len(rolls)} rolls)")
+                        for r in rolls[-5:]:
+                            st.markdown(f"- {r}")
 
 
