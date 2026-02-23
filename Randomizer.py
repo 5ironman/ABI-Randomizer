@@ -437,10 +437,11 @@ def add_build_code(weapon, new_code, username):
 def build_codes_tab(tab):
     tab.subheader("Build Codes Management")
     username = st.session_state.username
+
     if not st.session_state.build_codes_authenticated:
         with tab.form("build_code_password_form"):
             pw_input = tab.text_input("Enter password to edit build codes", type="password")
-            pw_submit = tab.form_submit_button("Submit")
+            pw_submit = st.form_submit_button("Submit")  # MUST be inside the `with tab.form(...)`
             if pw_submit:
                 if pw_input == BUILD_CODES_PASSWORD:
                     st.session_state.build_codes_authenticated = True
@@ -448,12 +449,15 @@ def build_codes_tab(tab):
                     st.stop()
                 else:
                     tab.error("Incorrect password")
+
     if st.session_state.build_codes_authenticated:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         weapon_choice = tab.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
         new_code = tab.text_input("Enter new build code")
+        # Outside the form, use normal tab.button for adding codes
         if tab.button("Add Code"):
             add_build_code(weapon_choice, new_code, username)
+
         with tab.expander("All Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 tab.markdown(f"**{weapon}**")
@@ -525,6 +529,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
