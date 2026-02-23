@@ -88,9 +88,22 @@ if username_cookie and username_cookie in accounts:
     st.session_state.authenticated = True
 
 # ----------------------
-# REQUIRE LOGIN BEFORE SHOWING ANY CONTENT
+# LOGIN / REGISTER MODULE
 # ----------------------
-if not st.session_state.authenticated:
+st.session_state.setdefault("user_authenticated", False)
+st.session_state.setdefault("username", "")
+st.session_state.setdefault("user_accounts", load_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE))
+
+accounts = st.session_state.user_accounts
+
+# --- Persistent login via cookie ---
+username_cookie = cookies.get("username")
+if username_cookie and username_cookie in accounts:
+    st.session_state.username = username_cookie
+    st.session_state.user_authenticated = True
+
+# --- Require login before showing any content ---
+if not st.session_state.user_authenticated:
     st.subheader("Login / Register")
     login_tab, register_tab = st.tabs(["Login", "Register"])
 
@@ -102,12 +115,13 @@ if not st.session_state.authenticated:
             if login_user in accounts:
                 stored_hash = accounts[login_user].encode()
                 if bcrypt.checkpw(login_pw.encode(), stored_hash):
+                    # Successful login
                     st.session_state.username = login_user
-                    st.session_state.authenticated = True
+                    st.session_state.user_authenticated = True
                     cookies["username"] = login_user
                     cookies.save()
                     st.success(f"Welcome back, {login_user}!")
-                    st.experimental_rerun()
+                    st.stop()  # stop execution to re-render with authenticated session
                 else:
                     st.error("Incorrect password.")
             else:
@@ -131,26 +145,19 @@ if not st.session_state.authenticated:
                 st.session_state.user_accounts = accounts
                 save_json_local(USER_ACCOUNTS_FILE, ACCOUNTS_LOCK_FILE, accounts)
 
-                # Auto-login
+                # Auto-login after registration
                 st.session_state.username = reg_user
-                st.session_state.authenticated = True
+                st.session_state.user_authenticated = True
                 cookies["username"] = reg_user
                 cookies.save()
 
                 st.success(f"Account created! You are now logged in as {reg_user}.")
-                st.experimental_rerun()
+                st.stop()  # stop execution to render app with authenticated session
 
-# ----------------------
-# SHOW EVERYTHING ELSE ONLY AFTER LOGIN
-# ----------------------
-if st.session_state.authenticated:
+# --- If user is authenticated, show the rest of your app ---
+if st.session_state.user_authenticated:
     st.sidebar.write(f"Logged in as: {st.session_state.username}")
-    
-    # --- Place the rest of your app here ---
-    # Randomizer tab, Build Codes tab, Admin Panel tab, filters, etc.
-    # Example:
-    st.header("Welcome to the Randomizer App!")
-    # Your existing tabs and filters code goes here
+    # The rest of your app goes here (Randomizer, Build Codes, Admin Panel)
 
 # ----------------------
 # GITHUB LOAD / SAVE (BUILD CODES & USER ROLLS)
@@ -537,6 +544,7 @@ if "Admin Panel" in tabs_list:
                             st.text("No rolls yet.")
             else:
                 st.info("No users found.")
+
 
 
 
