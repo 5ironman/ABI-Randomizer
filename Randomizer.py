@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # CONFIG
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
-REFRESH_INTERVAL_MS = 5000  # 5 seconds auto-refresh
+REFRESH_INTERVAL_MS = 5000  # Auto-refresh interval
 
 # ----------------------
 # AUTO REFRESH
@@ -18,7 +18,7 @@ REFRESH_INTERVAL_MS = 5000  # 5 seconds auto-refresh
 st_autorefresh(interval=REFRESH_INTERVAL_MS, key="auto_refresh")
 
 # ----------------------
-# GITHUB
+# GITHUB CONFIG
 # ----------------------
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", None)
 REPO_NAME = st.secrets.get("REPO_NAME", None)
@@ -68,7 +68,7 @@ def save_build_codes_github(codes):
             file = None
             latest_codes = {}
 
-        # Merge new codes without removing others
+        # Merge codes to avoid overwriting other users
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
@@ -94,11 +94,10 @@ def save_build_codes_github(codes):
         st.warning(f"GitHub save failed: {e}")
 
 # ----------------------
-# SESSION STATE
+# SESSION STATE INIT
 # ----------------------
 if "build_codes" not in st.session_state:
-    codes = load_build_codes_github() if repo else load_build_codes_local()
-    st.session_state.build_codes = codes
+    st.session_state.build_codes = load_build_codes_github() if repo else load_build_codes_local()
 
 # ----------------------
 # WEAPONS DATA
@@ -321,7 +320,9 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# Remove codes safely (merge-safe)
+# ----------------------
+# REMOVE BUILD CODES SAFELY
+# ----------------------
 st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in sorted(st.session_state.build_codes.items()):
     if not codes: continue
@@ -337,6 +338,7 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
         if not checked:
             remove_list.append(code)
     if remove_list:
+        # Merge latest codes before removing
         latest_codes = load_build_codes_github() if repo else load_build_codes_local()
         for code in remove_list:
             if code in latest_codes.get(weapon, []):
@@ -348,4 +350,5 @@ for weapon, codes in sorted(st.session_state.build_codes.items()):
         save_build_codes_local(latest_codes)
         save_build_codes_github(latest_codes)
         st.success(f"Removed {len(remove_list)} code(s) from {weapon}")
+
 
