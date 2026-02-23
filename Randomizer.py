@@ -432,9 +432,10 @@ def randomizer_tab(tab):
     # Generate Loadout
     tab.header("Generate Loadout")
     # After generating a loadout
-    if st.button("Generate Loadout"):
+    tab.header("Generate Loadout")
+    if tab.button("Generate Loadout"):  # <-- Use tab.button, NOT st.button
         loadout = generate_loadout()
-        st.code(loadout)
+        tab.code(loadout)
     
         # Save user roll
         user = st.session_state.username
@@ -571,6 +572,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
