@@ -431,8 +431,6 @@ def randomizer_tab(tab):
                      on_change=lambda t=tier: st.session_state.helmet_filters.update({t: st.session_state[f"helmet_cb_{t}"]}))
     # Generate Loadout
     tab.header("Generate Loadout")
-    # After generating a loadout
-    tab.header("Generate Loadout")
     if tab.button("Generate Loadout"):  # <-- Use tab.button, NOT st.button
         loadout = generate_loadout()
         tab.code(loadout)
@@ -579,6 +577,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
