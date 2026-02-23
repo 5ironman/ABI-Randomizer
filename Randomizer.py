@@ -139,7 +139,7 @@ ammo_data = {
     "9x19mm": ["PSO", "PST", "AP6.3", "DumDum", "7N31"],
     "12x70mm": ["Type 5 buckshot", "Type 7 buckshot", "Type 8 buckshot",
                 "Flechette Buckshot", "Dual Shell", "Led Slug", "Grizzly Slug",
-                "RIP Slug", "GT Slug", "AP Slug"],
+                "RIP Slug", "GT Slug"],
     "5.7x28mm": ["SS197SR", "SS190", "R37.X", "L191", "SS198"],
     "9x39mm": ["SP5", "SP6", "7N9", "7N12"]
 }
@@ -250,28 +250,28 @@ def generate_loadout():
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# Weapon filters
+# --- Weapon filters ---
 st.subheader("Weapon Categories")
 for cat in WEAPONS_DATA:
     st.session_state.weapon_filters[cat] = st.checkbox(
         cat, value=st.session_state.weapon_filters[cat], key=f"weapon_chk_{cat}"
     )
 
-# Armor filters
+# --- Armor filters ---
 st.subheader("Armor Tiers")
 for tier in armors:
     st.session_state.armor_filters[tier] = st.checkbox(
         tier, value=st.session_state.armor_filters[tier], key=f"armor_chk_{tier}"
     )
 
-# Helmet filters
+# --- Helmet filters ---
 st.subheader("Helmet Tiers")
 for tier in helmets:
     st.session_state.helmet_filters[tier] = st.checkbox(
         tier, value=st.session_state.helmet_filters[tier], key=f"helmet_chk_{tier}"
     )
 
-# Generate loadout
+# --- Generate loadout ---
 st.header("Generate Loadout")
 if st.button("Generate Loadout"):
     st.code(generate_loadout())
@@ -281,11 +281,12 @@ if st.button("Generate Loadout"):
 # ----------------------
 st.header("Build Codes")
 
+# --- Add code UI ---
 weapon_choice = st.selectbox("Weapon", list(st.session_state.build_codes.keys()))
 new_code = st.text_input("New Build Code")
 
 def add_code():
-    code = new_code
+    code = new_code.strip()
     weapon = weapon_choice
     if code and code not in st.session_state.build_codes[weapon]:
         st.session_state.build_codes[weapon].append(code)
@@ -295,10 +296,11 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# Existing codes with remove
-st.subheader("Existing Build Codes")
-to_remove = None
+# --- Remove code handling ---
+if "remove_code" not in st.session_state:
+    st.session_state.remove_code = None
 
+st.subheader("Existing Build Codes")
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
@@ -308,11 +310,14 @@ for weapon, codes in st.session_state.build_codes.items():
         cols[0].text(code)
         remove_key = f"remove_{weapon}_{i}"
         if cols[1].button("Remove", key=remove_key):
-            to_remove = (weapon, i)
+            st.session_state.remove_code = (weapon, i)
 
-if to_remove:
-    weapon, i = to_remove
-    st.session_state.build_codes[weapon].pop(i)
+# --- Process removal immediately ---
+if st.session_state.remove_code:
+    weapon, i = st.session_state.remove_code
+    removed_code = st.session_state.build_codes[weapon].pop(i)
     save_build_codes_local(st.session_state.build_codes)
     save_build_codes_github(st.session_state.build_codes)
-    st.success(f"Removed code for {weapon}")
+    st.success(f"Removed code '{removed_code}' for {weapon}")
+    st.session_state.remove_code = None
+    st.experimental_rerun()  # rerun immediately to reflect changes
