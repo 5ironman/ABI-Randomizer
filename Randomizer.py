@@ -295,6 +295,12 @@ def add_code():
     weapon = weapon_choice
     if code and code not in st.session_state.build_codes[weapon]:
         st.session_state.build_codes[weapon].append(code)
+        # Initialize checkbox for new code
+        if weapon not in st.session_state.code_checked:
+            st.session_state.code_checked[weapon] = {}
+        st.session_state.code_checked[weapon][code] = True
+
+        # Save
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
         st.success(f"Build code '{code}' added")
@@ -302,12 +308,16 @@ def add_code():
 
 st.button("Add Code", on_click=add_code)
 
-# Initialize checkbox tracking
+# Initialize checkbox tracking robustly
 if "code_checked" not in st.session_state:
-    st.session_state.code_checked = {
-        weapon: {code: True for code in codes}
-        for weapon, codes in st.session_state.build_codes.items()
-    }
+    st.session_state.code_checked = {}
+
+for weapon, codes in st.session_state.build_codes.items():
+    if weapon not in st.session_state.code_checked:
+        st.session_state.code_checked[weapon] = {}
+    for code in codes:
+        if code not in st.session_state.code_checked[weapon]:
+            st.session_state.code_checked[weapon][code] = True
 
 # Display existing codes
 st.subheader("Existing Build Codes (uncheck to remove)")
@@ -315,16 +325,16 @@ st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
+
     st.markdown(f"**{weapon}**")
-
-    if weapon not in st.session_state.code_checked:
-        st.session_state.code_checked[weapon] = {code: True for code in codes}
-
     remove_list = []
 
     for code in codes:
-        checked = st.checkbox(code, value=st.session_state.code_checked[weapon].get(code, True),
-                              key=f"{weapon}_{code}")
+        checked = st.checkbox(
+            code,
+            value=st.session_state.code_checked[weapon].get(code, True),
+            key=f"{weapon}_{code}"
+        )
         st.session_state.code_checked[weapon][code] = checked
 
         if not checked:
@@ -335,6 +345,7 @@ for weapon, codes in st.session_state.build_codes.items():
             st.session_state.build_codes[weapon].remove(code)
             del st.session_state.code_checked[weapon][code]
 
+        # Save changes
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
         st.success(f"Removed {len(remove_list)} code(s) from {weapon}")
