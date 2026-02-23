@@ -15,10 +15,13 @@ LOCK_FILE = BUILD_CODES_FILE + ".lock"
 REFRESH_INTERVAL_MS = 5000
 BUILD_CODES_PASSWORD = "ABI-RANDOM123"
 
+# ----------------------
+# AUTO REFRESH
+# ----------------------
 st_autorefresh(interval=REFRESH_INTERVAL_MS, key="auto_refresh")
 
 # ----------------------
-# GITHUB
+# GITHUB CONFIG
 # ----------------------
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", None)
 REPO_NAME = st.secrets.get("REPO_NAME", None)
@@ -36,7 +39,7 @@ def get_github_repo():
 repo = get_github_repo()
 
 # ----------------------
-# LOAD / SAVE WITH FILELOCK
+# LOAD / SAVE FUNCTIONS WITH FILELOCK
 # ----------------------
 def load_build_codes_local():
     with FileLock(LOCK_FILE):
@@ -70,6 +73,7 @@ def save_build_codes_github(codes):
             file = None
             latest_codes = {}
 
+        # Merge new codes
         for weapon, code_list in codes.items():
             latest_codes.setdefault(weapon, [])
             for code in code_list:
@@ -95,9 +99,12 @@ def save_build_codes_github(codes):
         st.warning(f"GitHub save failed: {e}")
 
 # ----------------------
-# SESSION STATE
+# SESSION STATE INIT
 # ----------------------
 st.session_state.setdefault("build_codes", load_build_codes_github() if repo else load_build_codes_local())
+st.session_state.setdefault("weapon_filters", {})
+st.session_state.setdefault("armor_filters", {})
+st.session_state.setdefault("helmet_filters", {})
 st.session_state.setdefault("authenticated", False)
 
 # ----------------------
@@ -205,80 +212,122 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
+
+# Ensure all weapons have a build code list
+for cat in WEAPONS_DATA.values():
+    st.session_state.build_codes.update({w: [] for w in cat if w not in st.session_state.build_codes})
+
 # ----------------------
-# BUILD CODE FUNCTIONS
+# FILTER STATE
+# ----------------------
+st.session_state.weapon_filters = {cat: True for cat in WEAPONS_DATA}
+st.session_state.armor_filters = {tier: True for tier in armors}
+st.session_state.helmet_filters = {tier: True for tier in helmets}
+
+# ----------------------
+# RANDOMIZER FUNCTION
+# ----------------------
+def generate_loadout():
+    weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
+               if st.session_state.weapon_filters.get(cat, True)
+               for w, cal in items.items()]
+    if not weapons:
+        return "No weapons available."
+    cat, weapon, cal = random.choice(weapons)
+    ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
+    armor_tiers = [t for t in armors if st.session_state.armor_filters[t]]
+    helmet_tiers = [t for t in helmets if st.session_state.helmet_filters[t]]
+    armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})"
+    helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
+    backpack = random.choice(backpacks)
+    codes = st.session_state.build_codes.get(weapon, [])
+    code = random.choice(codes) if codes else None
+    lines = [f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
+    if code:
+        lines.append(f"BUILD CODE: {code}")
+    lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
+    return "\n".join(lines)
+
+# ----------------------
+# BUILD CODE MANAGEMENT
 # ----------------------
 def add_build_code(weapon, new_code):
     new_code = new_code.strip()
     if not new_code:
         return
-    codes = st.session_state.build_codes.setdefault(weapon, [])
-    if new_code not in codes:
-        codes.append(new_code)
-        save_build_codes_local(st.session_state.build_codes)
-        save_build_codes_github(st.session_state.build_codes)
+    latest_codes = load_build_codes_github() if repo else load_build_codes_local()
+    latest_codes.setdefault(weapon, [])
+    st.session_state.build_codes.setdefault(weapon, [])
+    if new_code not in latest_codes[weapon]:
+        latest_codes[weapon].append(new_code)
+        st.session_state.build_codes[weapon] = latest_codes[weapon]
+        save_build_codes_local(latest_codes)
+        save_build_codes_github(latest_codes)
         st.success(f"Added '{new_code}' to {weapon}")
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
 def remove_build_code(weapon, code):
-    codes = st.session_state.build_codes.get(weapon, [])
-    if code in codes:
-        codes.remove(code)
+    if code in st.session_state.build_codes.get(weapon, []):
+        st.session_state.build_codes[weapon].remove(code)
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
         st.success(f"Removed '{code}' from {weapon}")
 
 # ----------------------
-# UI
+# STREAMLIT UI
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 tab1, tab2 = st.tabs(["Randomizer","Build Codes"])
 
-# --- Randomizer Tab ---
+# --- TAB 1: RANDOMIZER ---
 with tab1:
-    st.subheader("Generate Random Loadout")
-    weapon_list = [(cat, w, cal) for cat, items in WEAPONS_DATA.items() for w, cal in items.items()]
+    st.subheader("Weapon Categories")
+    for cat in WEAPONS_DATA:
+        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+    st.subheader("Armor Tiers")
+    for tier in armors:
+        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+    st.subheader("Helmet Tiers")
+    for tier in helmets:
+        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
+    st.header("Generate Loadout")
     if st.button("Generate Loadout"):
-        cat, weapon, cal = random.choice(weapon_list)
-        ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
-        armor = random.choice(armors["Tier 1"]+armors["Tier 2"])
-        helmet = random.choice(helmets["Tier 1"]+helmets["Tier 2"])
-        backpack = random.choice(backpacks)
-        codes = st.session_state.build_codes.get(weapon, [])
-        code = random.choice(codes) if codes else None
-        st.code(f"Weapon: {weapon}\nAmmo: {ammo}\nArmor: {armor}\nHelmet: {helmet}\nBackpack: {backpack}" + (f"\nBuild Code: {code}" if code else ""))
+        st.code(generate_loadout())
 
-# --- Build Codes Tab ---
+# --- TAB 2: BUILD CODES ---
 with tab2:
-    # PASSWORD
+    st.header("Build Codes Management")
+
+    # PASSWORD CHECK
     if not st.session_state.authenticated:
-        pw = st.text_input("Enter password", type="password")
+        pw = st.text_input("Enter password to edit build codes", type="password")
         if st.button("Submit Password"):
-            if pw == "ABI-RANDOM123":
+            if pw == BUILD_CODES_PASSWORD:
                 st.session_state.authenticated = True
                 st.success("Password correct!")
             else:
                 st.error("Incorrect password")
         st.stop()
 
-    # ADD BUILD CODE
-    st.subheader("Add Build Code")
-    weapon_choice = st.selectbox("Select Weapon", sorted(st.session_state.build_codes.keys()))
-    new_code = st.text_input("Enter new build code")
-    if st.button("Add Code"):
+    # ADD NEW CODE
+    weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
+    st.subheader(f"Add Build Code to {weapon_choice}")
+    new_code = st.text_input("Enter new build code", key="new_code_input")
+    if st.button("Add Code", key="add_code_btn"):
         add_build_code(weapon_choice, new_code)
 
-    # DISPLAY AND REMOVE
-    st.subheader("Existing Build Codes")
-    for weapon, codes in st.session_state.build_codes.items():
+    st.markdown("---")
+    st.subheader("All Build Codes")
+
+    # SHOW ALL BUILD CODES WITH INLINE REMOVE
+    for weapon, codes in sorted(st.session_state.build_codes.items()):
         if not codes:
             continue
         st.markdown(f"**{weapon}**")
-        for code in codes:
-            cols = st.columns([0.8,0.2])
+        for code in codes.copy():  # copy to avoid iteration issues
+            cols = st.columns([0.8, 0.2])
             cols[0].markdown(f"- {code}")
-            if cols[1].button("Remove", key=f"{weapon}_{code}"):
+            if cols[1].button("Remove", key=f"remove_{weapon}_{code}"):
                 remove_build_code(weapon, code)
-
-
+                codes.remove(code)  # remove immediately from loop to update UI
