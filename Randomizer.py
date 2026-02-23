@@ -266,13 +266,6 @@ def add_build_code(weapon, new_code):
     else:
         st.warning(f"Code '{new_code}' already exists for {weapon}")
 
-def remove_build_code(weapon, code):
-    if code in st.session_state.build_codes.get(weapon, []):
-        st.session_state.build_codes[weapon].remove(code)
-        save_build_codes_local(st.session_state.build_codes)
-        save_build_codes_github(st.session_state.build_codes)
-        st.success(f"Removed '{code}' from {weapon}")
-
 # ----------------------
 # STREAMLIT UI
 # ----------------------
@@ -319,15 +312,10 @@ with tab2:
     st.markdown("---")
     st.subheader("All Build Codes")
 
-    # SHOW ALL BUILD CODES WITH INLINE REMOVE
+    # SHOW ALL BUILD CODES
     for weapon, codes in sorted(st.session_state.build_codes.items()):
         if not codes:
             continue
         st.markdown(f"**{weapon}**")
-        for code in codes.copy():  # iterate over a copy
-            cols = st.columns([0.8, 0.2])
-            cols[0].markdown(f"- {code}")
-            if cols[1].button("Remove", key=f"remove_{weapon}_{code}"):
-                remove_build_code(weapon, code)
-
-
+        for code in codes:
+            st.markdown(f"- {code}")
