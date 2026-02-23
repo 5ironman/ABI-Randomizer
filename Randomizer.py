@@ -14,7 +14,6 @@ BUILD_CODES_FILE = "build_codes.json"
 USER_ROLLS_FILE = "user_rolls.json"
 LOCK_FILE = BUILD_CODES_FILE + ".lock"
 USER_LOCK_FILE = USER_ROLLS_FILE + ".lock"
-REFRESH_INTERVAL_MS = 5000
 BUILD_CODES_PASSWORD = "ABI-RANDOM123"
 ADMIN_PASSWORD = "5ironman17admin"
 
@@ -290,7 +289,6 @@ def add_build_code(weapon, new_code):
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
 
-# Track active tab
 tabs = ["Randomizer", "Build Codes", "Admin Panel"]
 tab_selected = st.radio("Select tab", tabs, index=tabs.index(st.session_state.active_tab))
 st.session_state.active_tab = tab_selected
@@ -299,43 +297,33 @@ tab1_active = tab_selected == "Randomizer"
 tab2_active = tab_selected == "Build Codes"
 tab3_active = tab_selected == "Admin Panel"
 
-# Auto-refresh only for Build Codes / Admin Panel
+# Auto-refresh only for Build Codes/Admin Panel
 if tab2_active or tab3_active:
-    st_autorefresh(interval=REFRESH_INTERVAL_MS, key="auto_refresh")
+    st_autorefresh(interval=5000, key="auto_refresh")
 
 # ---------------------- RANDOMIZER TAB ----------------------
 if tab1_active:
     st.subheader("Enter Username")
     st.session_state.username = st.text_input("Username", value=st.session_state.username, key="username_input")
-
     if not st.session_state.username.strip():
         st.warning("Please enter a username to use the randomizer.")
     else:
         st.subheader("Weapon Categories")
         for cat in WEAPONS_DATA:
-            st.session_state.weapon_filters[cat] = st.checkbox(cat,
-                value=st.session_state.weapon_filters.get(cat, True),
-                key=f"weapon_filter_{cat}")
-
+            st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
         st.subheader("Armor Tiers")
         for tier in armors:
-            st.session_state.armor_filters[tier] = st.checkbox(tier,
-                value=st.session_state.armor_filters.get(tier, True),
-                key=f"armor_filter_{tier}")
-
+            st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
         st.subheader("Helmet Tiers")
         for tier in helmets:
-            st.session_state.helmet_filters[tier] = st.checkbox(tier,
-                value=st.session_state.helmet_filters.get(tier, True),
-                key=f"helmet_filter_{tier}")
+            st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
 
         st.header("Generate Loadout")
-        if st.button("Generate Loadout", key="generate_loadout_btn"):
+        if st.button("Generate Loadout"):
             loadout = generate_loadout()
             st.code(loadout)
-            username = st.session_state.username
-            st.session_state.user_rolls.setdefault(username, [])
-            st.session_state.user_rolls[username].append(loadout)
+            user = st.session_state.username
+            st.session_state.user_rolls.setdefault(user, []).append(loadout)
             save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
             save_user_rolls_github(st.session_state.user_rolls)
 
@@ -352,18 +340,18 @@ if tab2_active:
                 st.error("Incorrect password")
     else:
         weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
-        new_code = st.text_input("Enter new build code", key="new_code_input")
-        if st.button("Add Code", key="add_code_btn"):
+        new_code = st.text_input("Enter new build code")
+        if st.button("Add Code"):
             add_build_code(weapon_choice, new_code)
-
         st.markdown("---")
         st.subheader("All Build Codes")
         for weapon, codes in sorted(st.session_state.build_codes.items()):
-            if not codes:
-                continue
             st.markdown(f"**{weapon}**")
-            for code in codes:
-                st.markdown(f"- {code}")
+            if codes:
+                for code in codes:
+                    st.markdown(f"- {code}")
+            else:
+                st.markdown("- No codes yet")
 
 # ---------------------- ADMIN PANEL TAB ----------------------
 if tab3_active:
@@ -379,11 +367,12 @@ if tab3_active:
     if st.session_state.admin_authenticated:
         st.subheader("All Weapon Build Codes (Vertical View)")
         for weapon, codes in sorted(st.session_state.build_codes.items()):
-            if not codes:
-                continue
             st.markdown(f"**{weapon}**")
-            for code in codes:
-                st.markdown(f"- {code}")
+            if codes:
+                for code in codes:
+                    st.markdown(f"- {code}")
+            else:
+                st.markdown("- No codes yet")
 
         st.markdown("---")
         st.subheader("User Roll History (Last 5 Rolls)")
@@ -391,12 +380,6 @@ if tab3_active:
             st.markdown(f"**{user}** ({len(rolls)} rolls)")
             for r in rolls[-5:]:
                 st.markdown(f"- {r}")
-
-        if st.button("Clear All Roll History", key="clear_rolls_btn"):
-            st.session_state.user_rolls = {}
-            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-            save_user_rolls_github(st.session_state.user_rolls)
-            st.success("All user roll history cleared.")
 
         st.markdown("---")
         st.subheader("Analytics")
