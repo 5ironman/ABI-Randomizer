@@ -148,7 +148,7 @@ if saved_username:
     st.session_state.username = saved_username
 elif not st.session_state.username:
     with st.form("username_form"):
-        username_input = st.text_input("Enter your username to continue:")
+        username_input = st.text_input("Enter your username to continue (Press Submit Twice):")
         submitted = st.form_submit_button("Submit")
     
     if submitted:
@@ -450,6 +450,7 @@ if st.session_state.username.lower() == "5ironman" and len(tabs_list) > 2:
                         st.markdown(f"**{user}** ({len(rolls)} rolls)")
                         for r in rolls[-5:]:
                             st.markdown(f"- {r}")
+
 
 
 
