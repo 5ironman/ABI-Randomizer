@@ -6,6 +6,7 @@
         "CLASS: Assault Rifles\nWEAPON: ZC-807\nAMMO: 7.62x39mm HP\nARMOR: H-Tac SWAT Body Armor\nHELMET: Motorcycle Helmet\nBACKPACK: 926 Field Backpack",
         "CLASS: SMGs\nWEAPON: MP40\nAMMO: 9x19mm PST\nARMOR: Security Body Armor\nHELMET: 56K Helicopter Helmet\nBACKPACK: Med Field Backpack",
         "CLASS: Pistols\nWEAPON: G17\nAMMO: 9x19mm PST\nARMOR: Security Body Armor (Tier 2)\nHELMET: Kelsey Fire Helmet (Tier 1)\nBACKPACK: Lightweight Camping Backpack",
-        "CLASS: Marksman Rifles\nWEAPON: SVDS\nAMMO: 7.62x54mm LPS\nARMOR: Defender M4 Heavy Body Armor (Black) (Tier 5)\nHELMET: 6B4 Helmet (Tier 3)\nBACKPACK: Sports Backpack"
+        "CLASS: Marksman Rifles\nWEAPON: SVDS\nAMMO: 7.62x54mm LPS\nARMOR: Defender M4 Heavy Body Armor (Black) (Tier 5)\nHELMET: 6B4 Helmet (Tier 3)\nBACKPACK: Sports Backpack",
+        "CLASS: Marksman Rifles\nWEAPON: VSS\nAMMO: 9x39mm 7N9\nARMOR: 926 Composite Body Armor (Tier 5)\nHELMET: 6B4 Helmet (Squad S) (Tier 3)\nBACKPACK: Sling Bag"
     ]
 }
