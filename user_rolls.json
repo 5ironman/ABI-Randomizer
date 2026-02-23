@@ -1,5 +1,6 @@
 {
     "5ironman": [
-        "CLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm LRN\nARMOR: Retro Infantry Bulletproof Vest (Tier 3)\nHELMET: SH18 Military Helmet (Tier 1)\nBACKPACK: Retro Marching Backpack"
+        "CLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm LRN\nARMOR: Retro Infantry Bulletproof Vest (Tier 3)\nHELMET: SH18 Military Helmet (Tier 1)\nBACKPACK: Retro Marching Backpack",
+        "CLASS: Assault Rifles\nWEAPON: AN-94\nAMMO: 5.45x39mm PP\nARMOR: Retro Bulletproof Vest (Tier 4)\nHELMET: 56K Helicopter Helmet (Tier 3)\nBACKPACK: Retro Marching Backpack"
     ]
 }
