@@ -340,11 +340,60 @@ if not st.session_state.user_authenticated:
     MAPS = ["Armory", "Farm", "Valley", "Airport", "Northridge", "TV Station"]
 
 # ----------------------
-# RANDOMIZER FUNCTION (placeholder)
+# RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    return "Randomizer logic goes here"
+    # Check that we have maps
+    if not MAPS:
+        return "No maps available."
 
+    map_choice = random.choice(MAPS)
+
+    # Filter weapons based on category filters
+    weapons = [(cat, w, cal) 
+               for cat, items in WEAPONS_DATA.items()
+               if st.session_state.weapon_filters.get(cat, True)
+               for w, cal in items.items()]
+    if not weapons:
+        return "No weapons available. Please enable at least one category."
+
+    # Select weapon
+    cat, weapon, cal = random.choice(weapons)
+    ammo = f"{cal} {random.choice(ammo_data.get(cal, [cal]))}" if cal else "No ammo"
+
+    # Armor and helmet tiers
+    armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
+    helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
+    if not armor_tiers: armor_tiers = list(armors.keys())
+    if not helmet_tiers: helmet_tiers = list(helmets.keys())
+
+    # Select armor and helmet
+    armor_piece = f"{random.choice(armors[random.choice(armor_tiers)])} ({random.choice(armor_tiers)})" if armors else "No armor"
+    helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})" if helmets else "No helmet"
+
+    # Select backpack
+    backpack = random.choice(backpacks) if backpacks else "No backpack"
+
+    # Build code
+    codes = st.session_state.build_codes.get(weapon, [])
+    code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
+
+    # Build loadout text
+    lines = [
+        f"MAP: {map_choice}",
+        f"CLASS: {cat}",
+        f"WEAPON: {weapon}",
+        f"AMMO: {ammo}"
+    ]
+    if code:
+        lines.append(f"BUILD CODE: {code}")
+    lines += [
+        f"ARMOR: {armor_piece}",
+        f"HELMET: {helmet_piece}",
+        f"BACKPACK: {backpack}"
+    ]
+
+    return "\n".join(lines)
 # ----------------------
 # BUILD CODE MANAGEMENT
 # ----------------------
@@ -484,6 +533,7 @@ if st.session_state.user_authenticated:
                                 st.text("No rolls yet.")
                 else:
                     st.info("No users found.")
+
 
 
 
