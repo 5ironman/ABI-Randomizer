@@ -9,7 +9,7 @@ from github.GithubException import UnknownObjectException
 # CONFIG & FILE PATHS
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
-REPO_NAME = "yourusername/yourrepo"  # <-- replace with your repo
+REPO_NAME = "5ironman/ABI-Randomizer"  # <-- replace with your repo
 
 # ----------------------
 # GITHUB SETUP
@@ -299,3 +299,4 @@ if st.button("Add Build Code"):
 
 st.subheader("Current Build Codes")
 st.json(st.session_state.build_codes)
+
