@@ -5,13 +5,15 @@ import os
 from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from streamlit_autorefresh import st_autorefresh
+from filelock import FileLock
 
 # ----------------------
 # CONFIG
 # ----------------------
 BUILD_CODES_FILE = "build_codes.json"
+LOCK_FILE = BUILD_CODES_FILE + ".lock"
 REFRESH_INTERVAL_MS = 5000
-BUILD_CODES_PASSWORD = "ABI-RANDOM123"  # Password for editing build codes
+BUILD_CODES_PASSWORD = "ABI-RANDOM123"
 
 # ----------------------
 # AUTO REFRESH
@@ -37,13 +39,19 @@ def get_github_repo():
 repo = get_github_repo()
 
 # ----------------------
-# LOAD / SAVE BUILD CODES
+# LOAD / SAVE FUNCTIONS WITH FILELOCK
 # ----------------------
 def load_build_codes_local():
-    if os.path.exists(BUILD_CODES_FILE):
-        with open(BUILD_CODES_FILE, "r") as f:
-            return json.load(f)
-    return {}
+    with FileLock(LOCK_FILE):
+        if os.path.exists(BUILD_CODES_FILE):
+            with open(BUILD_CODES_FILE, "r") as f:
+                return json.load(f)
+        return {}
+
+def save_build_codes_local(codes):
+    with FileLock(LOCK_FILE):
+        with open(BUILD_CODES_FILE, "w") as f:
+            json.dump(codes, f, indent=4)
 
 def load_build_codes_github():
     if repo is None:
@@ -53,10 +61,6 @@ def load_build_codes_github():
         return json.loads(file_content.decoded_content.decode())
     except Exception:
         return {}
-
-def save_build_codes_local(codes):
-    with open(BUILD_CODES_FILE, "w") as f:
-        json.dump(codes, f, indent=4)
 
 def save_build_codes_github(codes):
     if repo is None:
@@ -98,11 +102,10 @@ def save_build_codes_github(codes):
 # SESSION STATE INIT
 # ----------------------
 st.session_state.setdefault("build_codes", load_build_codes_github() if repo else load_build_codes_local())
-st.session_state.setdefault("needs_rerender", False)
 st.session_state.setdefault("weapon_filters", {})
 st.session_state.setdefault("armor_filters", {})
 st.session_state.setdefault("helmet_filters", {})
-st.session_state.setdefault("authenticated", False)  # Password authentication state
+st.session_state.setdefault("authenticated", False)
 st.session_state.setdefault("codes_to_remove", [])
 
 # ----------------------
@@ -248,73 +251,86 @@ def generate_loadout():
     return "\n".join(lines)
 
 # ----------------------
-# STREAMLIT UI WITH TABS
+# MULTI-USER SAFE ADD
+# ----------------------
+def add_build_code(weapon, new_code):
+    new_code = new_code.strip()
+    if not new_code:
+        return
+    # Load latest codes with lock
+    latest_codes = load_build_codes_github() if repo else load_build_codes_local()
+    latest_codes.setdefault(weapon, [])
+    st.session_state.build_codes.setdefault(weapon, [])
+    if new_code not in latest_codes[weapon]:
+        latest_codes[weapon].append(new_code)
+        st.session_state.build_codes[weapon] = latest_codes[weapon]
+        save_build_codes_local(latest_codes)
+        save_build_codes_github(latest_codes)
+        st.success(f"Added '{new_code}' to {weapon}")
+    else:
+        st.warning(f"Code '{new_code}' already exists for {weapon}")
+
+# ----------------------
+# MULTI-USER SAFE REMOVE
+# ----------------------
+def remove_build_codes(weapon, codes_to_remove):
+    if not codes_to_remove:
+        return
+    for code in codes_to_remove:
+        if code in st.session_state.build_codes[weapon]:
+            st.session_state.build_codes[weapon].remove(code)
+    save_build_codes_local(st.session_state.build_codes)
+    save_build_codes_github(st.session_state.build_codes)
+    st.success(f"Removed selected codes from {weapon}")
+
+# ----------------------
+# STREAMLIT UI
 # ----------------------
 st.title("ABI Randomizer & Build Codes")
-tab1, tab2 = st.tabs(["Randomizer", "Build Codes"])
+tab1, tab2 = st.tabs(["Randomizer","Build Codes"])
 
-# --- TAB 1: RANDOMIZER ---
+# --- TAB 1 ---
 with tab1:
     st.subheader("Weapon Categories")
     for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(
-            cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}"
-        )
+        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat])
 
     st.subheader("Armor Tiers")
     for tier in armors:
-        st.session_state.armor_filters[tier] = st.checkbox(
-            tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}"
-        )
+        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier])
 
     st.subheader("Helmet Tiers")
     for tier in helmets:
-        st.session_state.helmet_filters[tier] = st.checkbox(
-            tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}"
-        )
+        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier])
 
     st.header("Generate Loadout")
     if st.button("Generate Loadout"):
         st.code(generate_loadout())
 
-# --- TAB 2: BUILD CODES (Password Protected) ---
+# --- TAB 2 ---
 with tab2:
     st.header("Build Codes Management")
 
-    # --- PASSWORD CHECK ---
+    # PASSWORD CHECK
     if not st.session_state.authenticated:
-        password_input = st.text_input("Enter password to edit build codes", type="password")
+        pw = st.text_input("Enter password to edit build codes", type="password")
         if st.button("Submit Password"):
-            if password_input == BUILD_CODES_PASSWORD:
+            if pw == BUILD_CODES_PASSWORD:
                 st.session_state.authenticated = True
-                st.success("Password correct! You can now edit build codes.")
+                st.success("Password correct!")
             else:
-                st.error("Incorrect password.")
-        st.stop()  # stop rendering until authenticated
+                st.error("Incorrect password")
+        st.stop()
 
-    # --- EDITABLE BUILD CODES ---
-    weapon_choice = st.selectbox(
-        "Select Weapon",
-        sorted(st.session_state.build_codes.keys()),
-        key="weapon_select_tab2"
-    )
+    weapon_choice = st.selectbox("Select Weapon", sorted(st.session_state.build_codes.keys()))
 
-    # Add New Code
-    st.subheader("Add New Build Code")
-    new_code = st.text_input("Enter new build code", key="new_code_input")
+    # ADD
+    st.subheader("Add Build Code")
+    new_code = st.text_input("Enter new build code")
     if st.button("Add Code"):
-        code = new_code.strip()
-        if code:
-            if code not in st.session_state.build_codes[weapon_choice]:
-                st.session_state.build_codes[weapon_choice].append(code)
-                save_build_codes_local(st.session_state.build_codes)
-                save_build_codes_github(st.session_state.build_codes)
-                st.success(f"Added '{code}' to {weapon_choice}")
-                st.session_state.new_code_input = ""
-            else:
-                st.warning(f"Code '{code}' already exists for {weapon_choice}")
+        add_build_code(weapon_choice, new_code)
 
-    # Remove Codes
+    # REMOVE
     st.subheader("Remove Build Codes")
     current_codes = st.session_state.build_codes.get(weapon_choice, [])
     if current_codes:
@@ -323,21 +339,15 @@ with tab2:
             current_codes,
             default=st.session_state.codes_to_remove
         )
-
         if st.button("Remove Selected Codes"):
-            if st.session_state.codes_to_remove:
-                for code in st.session_state.codes_to_remove:
-                    if code in st.session_state.build_codes[weapon_choice]:
-                        st.session_state.build_codes[weapon_choice].remove(code)
-                save_build_codes_local(st.session_state.build_codes)
-                save_build_codes_github(st.session_state.build_codes)
-                st.success(f"Removed selected codes from {weapon_choice}")
-                st.session_state.codes_to_remove = []  # Clear selection
+            remove_build_codes(weapon_choice, st.session_state.codes_to_remove)
+            st.session_state.codes_to_remove = []
+            st.experimental_rerun()
     else:
         st.info(f"No build codes for {weapon_choice}")
 
-    # DEBUG: Show Current Codes
-    st.subheader("DEBUG: Session State Codes")
+    # DEBUG
+    st.subheader("Current Codes (DEBUG)")
     st.write(st.session_state.build_codes.get(weapon_choice, []))
 
 
