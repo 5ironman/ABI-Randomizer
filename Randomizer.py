@@ -321,26 +321,29 @@ tab1, tab2, tab3 = st.tabs(["Randomizer","Build Codes","Admin Panel"])
 with tab1:
     st.subheader("Enter Username")
     st.session_state.username = st.text_input("Username", value=st.session_state.username, key="username_input")
+    
+    if not st.session_state.username.strip():
+        st.warning("Please enter a username to use the randomizer.")
+    else:
+        st.subheader("Weapon Categories")
+        for cat in WEAPONS_DATA:
+            st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
+        st.subheader("Armor Tiers")
+        for tier in armors:
+            st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
+        st.subheader("Helmet Tiers")
+        for tier in helmets:
+            st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
 
-    st.subheader("Weapon Categories")
-    for cat in WEAPONS_DATA:
-        st.session_state.weapon_filters[cat] = st.checkbox(cat, value=st.session_state.weapon_filters[cat], key=f"weapon_{cat}")
-    st.subheader("Armor Tiers")
-    for tier in armors:
-        st.session_state.armor_filters[tier] = st.checkbox(tier, value=st.session_state.armor_filters[tier], key=f"armor_{tier}")
-    st.subheader("Helmet Tiers")
-    for tier in helmets:
-        st.session_state.helmet_filters[tier] = st.checkbox(tier, value=st.session_state.helmet_filters[tier], key=f"helmet_{tier}")
-
-    st.header("Generate Loadout")
-    if st.button("Generate Loadout"):
-        loadout = generate_loadout()
-        st.code(loadout)
-        username = st.session_state.username or "Guest"
-        st.session_state.user_rolls.setdefault(username, [])
-        st.session_state.user_rolls[username].append(loadout)
-        save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-        save_user_rolls_github(st.session_state.user_rolls)
+        st.header("Generate Loadout")
+        if st.button("Generate Loadout"):
+            loadout = generate_loadout()
+            st.code(loadout)
+            username = st.session_state.username
+            st.session_state.user_rolls.setdefault(username, [])
+            st.session_state.user_rolls[username].append(loadout)
+            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
+            save_user_rolls_github(st.session_state.user_rolls)
 
 # --- TAB 2: BUILD CODES ---
 with tab2:
@@ -373,43 +376,44 @@ with tab2:
 with tab3:
     st.header("Admin Panel")
     if not st.session_state.admin_authenticated:
-        admin_pw = st.text_input("Enter admin password", type="password")
+        st.subheader("Enter Admin Password")
+        admin_pw = st.text_input("Password", type="password", key="admin_pw_input")
         if st.button("Submit Admin Password"):
             if admin_pw == ADMIN_PASSWORD:
                 st.session_state.admin_authenticated = True
                 st.success("Admin access granted!")
             else:
                 st.error("Incorrect password")
-        st.stop()
 
-    st.subheader("All Weapon Build Codes")
-    st.code(st.session_state.build_codes)
+    if st.session_state.admin_authenticated:
+        st.subheader("All Weapon Build Codes")
+        st.code(st.session_state.build_codes)
 
-    st.subheader("User Roll History")
-    for user, rolls in st.session_state.user_rolls.items():
-        st.markdown(f"**{user}** ({len(rolls)} rolls)")
-        for r in rolls[-5:]:
-            st.markdown(f"- {r}")
+        st.subheader("User Roll History")
+        for user, rolls in st.session_state.user_rolls.items():
+            st.markdown(f"**{user}** ({len(rolls)} rolls)")
+            for r in rolls[-5:]:
+                st.markdown(f"- {r}")
 
-    st.subheader("Analytics")
-    total_rolls = sum(len(rolls) for rolls in st.session_state.user_rolls.values())
-    st.markdown(f"- Total rolls by all users: {total_rolls}")
+        st.subheader("Analytics")
+        total_rolls = sum(len(rolls) for rolls in st.session_state.user_rolls.values())
+        st.markdown(f"- Total rolls by all users: {total_rolls}")
 
-    top_users = sorted(st.session_state.user_rolls.items(), key=lambda x: len(x[1]), reverse=True)[:5]
-    st.markdown("- Top 5 users by rolls:")
-    for user, rolls in top_users:
-        st.markdown(f"  - {user}: {len(rolls)} rolls")
+        top_users = sorted(st.session_state.user_rolls.items(), key=lambda x: len(x[1]), reverse=True)[:5]
+        st.markdown("- Top 5 users by rolls:")
+        for user, rolls in top_users:
+            st.markdown(f"  - {user}: {len(rolls)} rolls")
 
-    # Weapon popularity
-    weapon_count = {}
-    for rolls in st.session_state.user_rolls.values():
-        for roll in rolls:
-            for line in roll.split("\n"):
-                if line.startswith("WEAPON: "):
-                    w = line.replace("WEAPON: ","")
-                    weapon_count[w] = weapon_count.get(w, 0) + 1
-    top_weapons = sorted(weapon_count.items(), key=lambda x: x[1], reverse=True)[:5]
-    st.markdown("- Top 5 rolled weapons:")
-    for w, c in top_weapons:
-        st.markdown(f"  - {w}: {c} times")
+        weapon_count = {}
+        for rolls in st.session_state.user_rolls.values():
+            for roll in rolls:
+                for line in roll.split("\n"):
+                    if line.startswith("WEAPON: "):
+                        w = line.replace("WEAPON: ","")
+                        weapon_count[w] = weapon_count.get(w, 0) + 1
+        top_weapons = sorted(weapon_count.items(), key=lambda x: x[1], reverse=True)[:5]
+        st.markdown("- Top 5 rolled weapons:")
+        for w, c in top_weapons:
+            st.markdown(f"  - {w}: {c} times")
+
 
