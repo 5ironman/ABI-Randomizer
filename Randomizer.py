@@ -212,7 +212,6 @@ backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
-
 # Ensure all weapons have a build code list
 for cat in WEAPONS_DATA.values():
     st.session_state.build_codes.update({w: [] for w in cat if w not in st.session_state.build_codes})
@@ -325,9 +324,10 @@ with tab2:
         if not codes:
             continue
         st.markdown(f"**{weapon}**")
-        for code in codes.copy():  # copy to avoid iteration issues
+        for code in codes.copy():  # iterate over a copy
             cols = st.columns([0.8, 0.2])
             cols[0].markdown(f"- {code}")
             if cols[1].button("Remove", key=f"remove_{weapon}_{code}"):
                 remove_build_code(weapon, code)
-                codes.remove(code)  # remove immediately from loop to update UI
+
+
