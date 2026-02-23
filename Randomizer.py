@@ -375,7 +375,7 @@ def generate_loadout():
         # Step 3: Pick ammo
         ammo_options = ammo_data.get(ammo_type, [ammo_type])
         chosen_ammo = random.choice(ammo_options)
-        loadout_lines.append(f"**{weapon}**\n  Ammo: {chosen_ammo}")
+        loadout_lines.append(f"Weapon: {weapon}\n  Ammo: {chosen_ammo}")
 
     # Armor
     armor_tiers = [tier for tier, enabled in st.session_state.armor_filters.items() if enabled]
@@ -572,6 +572,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
