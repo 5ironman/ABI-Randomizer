@@ -353,25 +353,48 @@ for cat in WEAPONS_DATA:
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    loadout = {}
-    available_categories = [cat for cat, enabled in st.session_state.weapon_filters.items() if enabled]
-    if available_categories:
-        weapon_category = random.choice(available_categories)
-        weapon = random.choice(list(WEAPONS_DATA[weapon_category].keys()))
-        ammo_type = WEAPONS_DATA[weapon_category][weapon]
-        ammo = random.choice(ammo_data.get(ammo_type, ["Default Ammo"]))
-        loadout["Weapon"] = f"{weapon} ({ammo})"
-    available_armor_tiers = [tier for tier, enabled in st.session_state.armor_filters.items() if enabled]
-    if available_armor_tiers:
-        tier = random.choice(available_armor_tiers)
-        loadout["Armor"] = random.choice(armors[tier])
-    available_helmet_tiers = [tier for tier, enabled in st.session_state.helmet_filters.items() if enabled]
-    if available_helmet_tiers:
-        tier = random.choice(available_helmet_tiers)
-        loadout["Helmet"] = random.choice(helmets[tier])
-    loadout["Backpack"] = random.choice(backpacks)
-    loadout["Map"] = random.choice(MAPS)
-    return json.dumps(loadout, indent=2)
+    import random
+
+    loadout_lines = []
+
+    # Filter weapons by selected categories
+    selected_categories = [cat for cat, enabled in st.session_state.weapon_filters.items() if enabled]
+    for category in selected_categories:
+        weapons = WEAPONS_DATA.get(category, {})
+        if not weapons:
+            continue
+        weapon = random.choice(list(weapons.keys()))
+        ammo = weapons[weapon]
+        ammo_options = ammo_data.get(ammo, [ammo])
+        chosen_ammo = random.choice(ammo_options)
+
+        # Format: Weapon name on first line, ammo type below
+        loadout_lines.append(f"**{weapon}**\n  Ammo: {chosen_ammo}")
+
+    # Example: add armor and helmet randomly
+    armor_tiers = [tier for tier, enabled in st.session_state.armor_filters.items() if enabled]
+    helmet_tiers = [tier for tier, enabled in st.session_state.helmet_filters.items() if enabled]
+
+    if armor_tiers:
+        armor_tier = random.choice(armor_tiers)
+        armor_item = random.choice(armors[armor_tier])
+        loadout_lines.append(f"Armor ({armor_tier}): {armor_item}")
+
+    if helmet_tiers:
+        helmet_tier = random.choice(helmet_tiers)
+        helmet_item = random.choice(helmets[helmet_tier])
+        loadout_lines.append(f"Helmet ({helmet_tier}): {helmet_item}")
+
+    # Backpack
+    backpack_item = random.choice(backpacks)
+    loadout_lines.append(f"Backpack: {backpack_item}")
+
+    # Map
+    map_choice = random.choice(MAPS)
+    loadout_lines.append(f"Map: {map_choice}")
+
+    # Join all lines nicely
+    return "\n".join(loadout_lines)
 
 # ----------------------
 # TAB FUNCTIONS
@@ -533,6 +556,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
