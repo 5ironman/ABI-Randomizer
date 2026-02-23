@@ -5,6 +5,7 @@
         "MAP: TV Station\nCLASS: Carbines\nWEAPON: Mini14\nAMMO: 5.56x45mm M193\nARMOR: 6B23 Body Armor (Tier 4)\nHELMET: 6BNT Helmet (Tier 4)\nBACKPACK: Med Field Backpack",
         "MAP: TV Station\nCLASS: Pistols\nWEAPON: Gold Deagle\nAMMO: .44 Cal JSP\nARMOR: 6B13 Body Armor (Tier 6)\nHELMET: PAS Standard Helmet (Tier 5)\nBACKPACK: 926 Field Backpack",
         "MAP: Northridge\nCLASS: SMGs\nWEAPON: Vector 9\nAMMO: 9x19mm PST\nARMOR: BT101 Tactical Body Armor (Tier 4)\nHELMET: SH50 Military Helmet (Tier 3)\nBACKPACK: RAL Heavy Military Backpack",
-        "MAP: Valley\nCLASS: Assault Rifles\nWEAPON: AR-57\nAMMO: 5.7x28mm R37.X\nARMOR: Old Security Body Armor (Tier 2)\nHELMET: SH50 Military Helmet (Tier 3)\nBACKPACK: RAL Heavy Military Backpack"
+        "MAP: Valley\nCLASS: Assault Rifles\nWEAPON: AR-57\nAMMO: 5.7x28mm R37.X\nARMOR: Old Security Body Armor (Tier 2)\nHELMET: SH50 Military Helmet (Tier 3)\nBACKPACK: RAL Heavy Military Backpack",
+        "MAP: Armory\nCLASS: Assault Rifles\nWEAPON: AN-94\nAMMO: 5.45x39mm PP\nARMOR: IMTV Samurai Full Protection (Tier 6)\nHELMET: SH18 Military Helmet (Tier 2)\nBACKPACK: Field Camping Backpack"
     ]
 }
