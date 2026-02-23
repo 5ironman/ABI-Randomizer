@@ -6,6 +6,7 @@ from github import Github, Auth
 from github.GithubException import UnknownObjectException
 from filelock import FileLock
 from datetime import datetime
+from streamlit_cookies_manager import EncryptedCookieManager
 
 # ----------------------
 # CONFIG
@@ -119,6 +120,13 @@ def save_user_rolls_github(rolls):
         st.warning(f"GitHub save failed: {e}")
 
 # ----------------------
+# COOKIE SETUP
+# ----------------------
+cookies = EncryptedCookieManager(prefix="abi_random_", password="CHANGE_THIS_SECRET_KEY")
+if not cookies.ready():
+    st.stop()
+
+# ----------------------
 # SESSION STATE INIT
 # ----------------------
 st.session_state.setdefault("build_codes", load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE))
@@ -131,24 +139,25 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("user_rolls", load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE))
 
 # ----------------------
-# GLOBAL USERNAME ENFORCEMENT
+# USERNAME ENFORCEMENT WITH COOKIE
 # ----------------------
-if not st.session_state.username.strip():
-    st.warning("You must enter a username to access any part of the site.")
-
+saved_username = cookies.get("username", "")
+if saved_username:
+    st.session_state.username = saved_username
+elif not st.session_state.username:
     with st.form("username_form"):
-        username_input = st.text_input("Enter your username to continue (press Submit twice):")
+        username_input = st.text_input("Enter your username to continue:")
         submitted = st.form_submit_button("Submit")
-
     if submitted:
         username_input = username_input.strip()
         if username_input:
             st.session_state.username = username_input
+            cookies["username"] = username_input
+            cookies.save()
             st.success(f"Welcome, {username_input}!")
         else:
             st.error("Username cannot be empty.")
-
-    if not st.session_state.username.strip():
+    if not st.session_state.username:
         st.stop()
 
 # ----------------------
@@ -270,10 +279,7 @@ st.session_state.helmet_filters = {tier: True for tier in helmets}
 # RANDOMIZER FUNCTION
 # ----------------------
 def generate_loadout():
-    # Randomly choose map
     map_choice = random.choice(MAPS)
-    
-    # Weapons
     weapons = [(cat, w, cal) for cat, items in WEAPONS_DATA.items()
                if st.session_state.weapon_filters.get(cat, True)
                for w, cal in items.items()]
@@ -282,7 +288,6 @@ def generate_loadout():
     cat, weapon, cal = random.choice(weapons)
     ammo = f"{cal} {random.choice(ammo_data.get(cal,[cal]))}"
 
-    # Armor and helmet tiers
     armor_tiers = [t for t, active in st.session_state.armor_filters.items() if active]
     helmet_tiers = [t for t, active in st.session_state.helmet_filters.items() if active]
     if not armor_tiers:
@@ -294,16 +299,13 @@ def generate_loadout():
     helmet_piece = f"{random.choice(helmets[random.choice(helmet_tiers)])} ({random.choice(helmet_tiers)})"
     backpack = random.choice(backpacks)
 
-    # Build codes
     codes = st.session_state.build_codes.get(weapon, [])
     code = random.choice([c["code"] for c in codes if isinstance(c, dict)]) if codes else None
 
-    # Compose lines
     lines = [f"MAP: {map_choice}", f"CLASS: {cat}", f"WEAPON: {weapon}", f"AMMO: {ammo}"]
     if code:
         lines.append(f"BUILD CODE: {code}")
     lines += [f"ARMOR: {armor_piece}", f"HELMET: {helmet_piece}", f"BACKPACK: {backpack}"]
-
     return "\n".join(lines)
 
 # ----------------------
@@ -364,7 +366,6 @@ with tab2:
     st.subheader("Build Codes Management")
     username = st.session_state.username
 
-    # Password form
     if not st.session_state.authenticated:
         with st.form("build_code_password_form"):
             pw_input = st.text_input("Enter password to edit build codes", type="password")
@@ -377,7 +378,6 @@ with tab2:
             else:
                 st.error("Incorrect password")
 
-    # Authenticated UI
     if st.session_state.authenticated:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         weapon_choice = st.selectbox("Select Weapon to Add Code", sorted(st.session_state.build_codes.keys()))
@@ -385,7 +385,6 @@ with tab2:
         if st.button("Add Code"):
             add_build_code(weapon_choice, new_code, username)
 
-        # Show only codes (no added_by or timestamp)
         with st.expander("All Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
@@ -402,7 +401,6 @@ with tab2:
 with tab3:
     st.subheader("Admin Panel")
 
-    # Password form
     if not st.session_state.admin_authenticated:
         with st.form("admin_password_form"):
             admin_pw_input = st.text_input("Enter Admin Password", type="password")
@@ -415,12 +413,10 @@ with tab3:
             else:
                 st.error("Incorrect password")
 
-    # Admin UI
     if st.session_state.admin_authenticated:
         st.session_state.build_codes = load_build_codes_github() if repo else load_json_local(BUILD_CODES_FILE, LOCK_FILE)
         st.session_state.user_rolls = load_user_rolls_github() if repo else load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
-        # Full build codes with added_by and timestamp
         with st.expander("All Weapon Build Codes"):
             for weapon, codes in sorted(st.session_state.build_codes.items()):
                 st.markdown(f"**{weapon}**")
@@ -433,7 +429,6 @@ with tab3:
                 else:
                     st.markdown("- No codes yet")
 
-        # User roll history
         with st.expander("User Roll History"):
             search_query = st.text_input("Search Users")
             for user, rolls in st.session_state.user_rolls.items():
