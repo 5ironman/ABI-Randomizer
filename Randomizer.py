@@ -445,8 +445,6 @@ if "Admin Panel" in tabs_list:
                 st.session_state.build_codes = load_json_local(BUILD_CODES_FILE, LOCK_FILE)
                 st.session_state.user_rolls = load_json_local(USER_ROLLS_FILE, USER_LOCK_FILE)
 
-            users = list(st.session_state.user_rolls.keys())
-
             # ================================
             # BUILD CODES DATABASE
             # ================================
@@ -469,58 +467,16 @@ if "Admin Panel" in tabs_list:
             st.divider()
 
             # ================================
-            # VIEW USERS
+            # USER ROLL HISTORY
             # ================================
-            st.subheader("All Users")
-            if users:
-                for user in users:
-                    count = len(st.session_state.user_rolls[user])
-                    st.write(f"{user} — {count} rolls")
+            st.subheader("User Roll History")
+            if st.session_state.user_rolls:
+                for user, rolls in st.session_state.user_rolls.items():
+                    with st.expander(f"{user} — {len(rolls)} rolls", expanded=False):
+                        if rolls:
+                            for i, roll in enumerate(reversed(rolls[-50:]), 1):  # show last 50 rolls
+                                st.text(f"{i}. {roll}")
+                        else:
+                            st.text("No rolls yet.")
             else:
                 st.info("No users found.")
-
-            st.divider()
-
-            # ================================
-            # RESET USER ROLLS
-            # ================================
-            st.subheader("Reset User Rolls")
-            if users:
-                reset_user = st.selectbox(
-                    "Select User",
-                    users,
-                    key="admin_reset_user"
-                )
-                if st.button("Reset Rolls"):
-                    st.session_state.user_rolls[reset_user] = []
-                    if repo:
-                        save_user_rolls_github(st.session_state.user_rolls)
-                    else:
-                        save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-                    st.success(f"{reset_user}'s rolls reset.")
-                    st.rerun()
-
-            st.divider()
-
-            # ================================
-            # DELETE USER
-            # ================================
-            st.subheader("Delete User Completely")
-            if users:
-                delete_user = st.selectbox(
-                    "Select User to Delete",
-                    users,
-                    key="admin_delete_user"
-                )
-                confirm_delete = st.checkbox("Confirm permanent deletion")
-                if st.button("Delete User"):
-                    if confirm_delete:
-                        st.session_state.user_rolls.pop(delete_user, None)
-                        if repo:
-                            save_user_rolls_github(st.session_state.user_rolls)
-                        else:
-                            save_json_local(USER_ROLLS_FILE, USER_LOCK_FILE, st.session_state.user_rolls)
-                        st.success(f"{delete_user} deleted.")
-                        st.rerun()
-                    else:
-                        st.warning("Please confirm deletion first.")
