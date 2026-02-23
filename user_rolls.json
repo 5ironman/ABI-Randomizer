@@ -2,6 +2,7 @@
     "5ironman": [
         "CLASS: Assault Rifles\nWEAPON: M4A1\nAMMO: 5.56x45mm FMJ Hunting\nARMOR: Retro Bulletproof Vest (Tier 1)\nHELMET: IND200 Helmet (Tier 1)\nBACKPACK: Outdoor Travel Backpack",
         "CLASS: SMGs\nWEAPON: MP40\nAMMO: 9x19mm AP6.3\nARMOR: IMTV Samurai Assault Armor (Tier 6)\nHELMET: Security Helmet (Tier 5)\nBACKPACK: XA4 Tactical Backpack",
-        "CLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm AKBS\nARMOR: IMTV Samurai Full Protection (Tier 2)\nHELMET: FA Assault Tactical Helmet (Tier 3)\nBACKPACK: RUSH Tactical Backpack"
+        "CLASS: SMGs\nWEAPON: T79\nAMMO: 7.62x25mm AKBS\nARMOR: IMTV Samurai Full Protection (Tier 2)\nHELMET: FA Assault Tactical Helmet (Tier 3)\nBACKPACK: RUSH Tactical Backpack",
+        "CLASS: Shotguns\nWEAPON: TOZ-34\nAMMO: 12x70mm Flechette Buckshot\nARMOR: 926 Composite Body Armor (Tier 2)\nHELMET: FA Assault Tactical Helmet (Tier 5)\nBACKPACK: 926 Field Backpack"
     ]
 }
