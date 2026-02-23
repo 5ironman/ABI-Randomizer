@@ -182,6 +182,7 @@ Backpacks = [
     "926 Field Backpack", "Field Camping Backpack", "RAL Heavy Military Backpack"
 ]
 
+
 # ----------------------
 # ENSURE BUILD CODES
 # ----------------------
@@ -277,7 +278,7 @@ if st.button("Generate Loadout"):
     st.code(generate_loadout())
 
 # ----------------------
-# BUILD CODE EDITOR
+# BUILD CODE EDITOR (checkbox-based)
 # ----------------------
 st.header("Build Codes")
 
@@ -291,33 +292,23 @@ def add_code():
         st.session_state.build_codes[weapon].append(code)
         save_build_codes_local(st.session_state.build_codes)
         save_build_codes_github(st.session_state.build_codes)
-        st.success("Build code added")
+        st.experimental_rerun()  # refresh UI to show new checkbox
 
 st.button("Add Code", on_click=add_code)
 
-# --- Remove code UI ---
-st.subheader("Existing Build Codes")
-to_remove = None  # store code to remove
-
+# --- Checkbox UI for existing codes ---
+st.subheader("Existing Build Codes (uncheck to remove)")
 for weapon, codes in st.session_state.build_codes.items():
     if not codes:
         continue
     st.markdown(f"**{weapon}**")
-    for code in codes:
-        cols = st.columns([4, 1])
-        cols[0].text(code)
-        remove_key = f"remove_{weapon}_{code}"
-        if cols[1].button("Remove", key=remove_key):
-            to_remove = (weapon, code)
-
-# After loop, process removal safely
-if to_remove:
-    weapon, code = to_remove
-    if code in st.session_state.build_codes[weapon]:
-        st.session_state.build_codes[weapon].remove(code)
-        save_build_codes_local(st.session_state.build_codes)
-        save_build_codes_github(st.session_state.build_codes)
-        st.success(f"Removed code '{code}' for {weapon}")
-
+    for code in codes[:]:  # iterate over copy
+        key = f"{weapon}_{code}"
+        checked = st.checkbox(code, value=True, key=key)
+        if not checked:
+            st.session_state.build_codes[weapon].remove(code)
+            save_build_codes_local(st.session_state.build_codes)
+            save_build_codes_github(st.session_state.build_codes)
+            st.experimental_rerun()  # refresh UI so checkbox disappears
 
 
