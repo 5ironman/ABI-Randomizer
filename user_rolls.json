@@ -34,6 +34,7 @@
         "Weapon: AKM\n  Ammo: T45M\nArmor (Tier 2): Security Body Armor\nHelmet (Tier 4): F80 Tactical Helmet\nBackpack: RUSH Tactical Backpack\nMap: Armory",
         "Weapon: SVDS\n  Ammo: 7BT1\nArmor (Tier 2): 220 Body Armor\nHelmet (Tier 1): Lightweight Safety Helmet\nBackpack: Medium Camping Backpack\nMap: Armory",
         "Weapon: Mosin-Nagant\n  Ammo: 7BT1\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 1): Tanker Protective Cap\nBackpack: RAL Heavy Military Backpack\nMap: TV Station",
-        "Weapon: M1911\n  Ammo: AP\nArmor (Tier 3): PCA350 Body Armor\nHelmet (Tier 4): KSS Tactical Helmet\nBackpack: Chapman Military Backpack\nMap: Northridge"
+        "Weapon: M1911\n  Ammo: AP\nArmor (Tier 3): PCA350 Body Armor\nHelmet (Tier 4): KSS Tactical Helmet\nBackpack: Chapman Military Backpack\nMap: Northridge",
+        "Weapon: F2000\n  Ammo: M855A1\nArmor (Tier 6): 6B45 Heavy Body Armor\nHelmet (Tier 5): RSP Heavy Tactical Helmet\nBackpack: Outdoor Travel Backpack\nMap: Airport"
     ]
 }
