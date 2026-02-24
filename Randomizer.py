@@ -157,7 +157,7 @@ def save_user_accounts_github(accounts_dict):
 # ----------------------
 # COOKIE SETUP
 # ----------------------
-cookies = EncryptedCookieManager(prefix="abi_random_", cookie_secret="YOUR_SECRET_KEY_HERE")
+cookies = EncryptedCookieManager(prefix="abi_random_", secret_key="YOUR_SECRET_KEY_HERE")
 if not cookies.ready():
     st.stop()
 
@@ -599,6 +599,7 @@ if st.session_state.user_authenticated:
     build_codes_tab(tabs[1])
     if "Admin Panel" in tabs_list:
         admin_panel_tab(tabs[2])
+
 
 
 
