@@ -7,6 +7,7 @@
         "Weapon: M45A1\n  Ammo: AP\nArmor (Tier 3): Standard SWAT Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: Large Camping Backpack\nMap: Northridge",
         "Weapon: Desert Eagle\n  Ammo: SJHP\nArmor (Tier 3): H-Tac SWAT Body Armor\nHelmet (Tier 4): IND Tactical Helmet\nBackpack: RAL Heavy Military Backpack\nMap: TV Station",
         "Weapon: T951\n  Ammo: DVP88\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 5): RSP Heavy Tactical Helmet\nBackpack: Chapman Military Backpack\nMap: Airport",
-        "Weapon: M45A1\n  Ammo: AP\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: RAL Heavy Military Backpack\nMap: Armory"
+        "Weapon: M45A1\n  Ammo: AP\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: RAL Heavy Military Backpack\nMap: Armory",
+        "Weapon: Desert Eagle\n  Ammo: JSP\nArmor (Tier 2): Retro Infantry Bulletproof Vest\nHelmet (Tier 5): 03 Heavy Tactical Helmet\nBackpack: Med Field Backpack\nMap: TV Station"
     ]
 }
