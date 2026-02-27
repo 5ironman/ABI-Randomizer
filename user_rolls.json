@@ -9,6 +9,7 @@
         "Weapon: T951\n  Ammo: DVP88\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 5): RSP Heavy Tactical Helmet\nBackpack: Chapman Military Backpack\nMap: Airport",
         "Weapon: M45A1\n  Ammo: AP\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 1): Kelsey Fire Helmet\nBackpack: RAL Heavy Military Backpack\nMap: Armory",
         "Weapon: Desert Eagle\n  Ammo: JSP\nArmor (Tier 2): Retro Infantry Bulletproof Vest\nHelmet (Tier 5): 03 Heavy Tactical Helmet\nBackpack: Med Field Backpack\nMap: TV Station",
-        "Weapon: MP5\n  Ammo: PSO\nArmor (Tier 6): Marshal Heavy Body Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: Large Camping Backpack\nMap: Armory"
+        "Weapon: MP5\n  Ammo: PSO\nArmor (Tier 6): Marshal Heavy Body Armor\nHelmet (Tier 4): 56K Helicopter Helmet\nBackpack: Large Camping Backpack\nMap: Armory",
+        "Weapon: PCC-9\n  Ammo: 7N31\nArmor (Tier 3): Standard SWAT Armor\nHelmet (Tier 3): 6B4 Helmet\nBackpack: Sports Backpack\nMap: Farm"
     ]
 }
