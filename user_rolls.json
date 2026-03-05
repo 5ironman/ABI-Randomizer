@@ -13,6 +13,7 @@
         "Weapon: PCC-9\n  Ammo: 7N31\nArmor (Tier 3): Standard SWAT Armor\nHelmet (Tier 3): 6B4 Helmet\nBackpack: Sports Backpack\nMap: Farm"
     ],
     "LingLing": [
-        "Weapon: Vector .45\n  Ammo: FMJ\nArmor (Tier 2): Retro Infantry Bulletproof Vest\nHelmet (Tier 3): 6B4 Helmet (Squad S)\nBackpack: Medium Camping Backpack\nMap: Farm"
+        "Weapon: Vector .45\n  Ammo: FMJ\nArmor (Tier 2): Retro Infantry Bulletproof Vest\nHelmet (Tier 3): 6B4 Helmet (Squad S)\nBackpack: Medium Camping Backpack\nMap: Farm",
+        "Weapon: HK416\n  Ammo: M995\nArmor (Tier 1): Old Security Body Armor\nHelmet (Tier 5): SH Matzka 2 Helmet\nBackpack: LUC Expanded Tactical Backpack\nMap: Northridge"
     ]
 }
