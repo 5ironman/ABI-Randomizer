@@ -17,7 +17,8 @@
         "Weapon: MAC-10\n  Ammo: FMJ\nArmor (Tier 6): KN Composite Body Armor\nHelmet (Tier 2): Retro Military Helmet\nBackpack: Retro Marching Backpack\nMap: Airport",
         "Weapon: MP5\n  Ammo: 7N31\nArmor (Tier 1): Retro Bulletproof Vest\nHelmet (Tier 6): SH65 Military Helmet\nBackpack: Retro Marching Backpack\nMap: TV Station",
         "Weapon: M110\n  Ammo: M62\nArmor (Tier 5): IMTV Samurai Standard Armor\nHelmet (Tier 3): SH12 Military Helmet\nBackpack: AMP7 Assault Backpack\nMap: Airport",
-        "Weapon: AKS-74U\n  Ammo: BS\nArmor (Tier 4): SEK Fortress Body Armor\nHelmet (Tier 1): Motorcycle Helmet\nBackpack: 926 Field Backpack\nMap: Farm"
+        "Weapon: AKS-74U\n  Ammo: BS\nArmor (Tier 4): SEK Fortress Body Armor\nHelmet (Tier 1): Motorcycle Helmet\nBackpack: 926 Field Backpack\nMap: Farm",
+        "Weapon: SVDS\n  Ammo: T46M\nArmor (Tier 4): IND401 Body Armor\nHelmet (Tier 3): 6B4 Helmet\nBackpack: Cowhide Backpack\nMap: Valley"
     ],
     "LingLing": [
         "Weapon: Vector .45\n  Ammo: FMJ\nArmor (Tier 2): Retro Infantry Bulletproof Vest\nHelmet (Tier 3): 6B4 Helmet (Squad S)\nBackpack: Medium Camping Backpack\nMap: Farm",
